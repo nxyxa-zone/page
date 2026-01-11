@@ -19,7 +19,7 @@
             body { background: white; padding: 0; }
             .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
             .main-card { box-shadow: none !important; border: none !important; border-radius: 0; }
-            textarea { border: 1px solid #e2e8f0 !important; background: transparent !important; }
+            textarea, select { border: 1px solid #e2e8f0 !important; background: transparent !important; -webkit-appearance: none; }
             .section-break { page-break-inside: avoid; }
         }
     </style>
@@ -27,13 +27,41 @@
 <body class="py-10 px-4">
 
     <div class="max-w-4xl mx-auto container">
-        <!-- Main Document -->
         <div class="bg-white shadow-xl rounded-lg overflow-hidden border border-slate-200 main-card">
             
-            <!-- Header sesuai draft -->
             <div class="p-8 border-b-4 border-slate-900 text-center">
                 <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
                     LEMBAR KERJA PESERTA DIDIK (LKPD) & PORTOFOLIO PJOK
+                </h1>
+                <p class="text-slate-600 font-bold mt-1">Materi: Bulu Tangkis (Pertemuan 1)</p>
+            </div>
+
+            <div class="p-8 md:p-12 space-y-10">
+                
+                <section class="section-break">
+                    <h2 class="font-bold text-slate-800 mb-4 underline uppercase">Identitas Siswa</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-semibold whitespace-nowrap">Nama:</span>
+                            <input type="text" class="w-full border-b border-dotted border-slate-400 focus:border-blue-500 outline-none px-2 py-1 bg-transparent" placeholder="...........................................................">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-semibold whitespace-nowrap">Kelas:</span>
+                            <input type="text" class="w-full border-b border-dotted border-slate-400 focus:border-blue-500 outline-none px-2 py-1 bg-transparent" placeholder="...........................................................">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-semibold whitespace-nowrap">Tanggal:</span>
+                            <input type="text" id="auto-date" class="w-full border-b border-dotted border-slate-400 outline-none px-2 py-1 bg-transparent">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section-break">
+                    <h2 class="font-bold text-slate-800 mb-3 uppercase border-l-4 border-slate-900 pl-3">I. RINGKASAN MATERI (Bahan Catatan)</h2>
+                    <ul class="list-disc ml-6 space-y-2 text-sm text-slate-700">
+                        <li><strong>Smash:</strong> Pukulan keras menukik ke bawah.</li>
+                        <li><strong>Lob:</strong> Pukulan melambung tinggi ke belakang.</li>
+                        <li><strong>Drop Shot:</strong> Pukulan tipis di dekat net.</li>
                 </h1>
                 <p class="text-slate-600 font-bold mt-1">Materi: Bulu Tangkis (Pertemuan 1)</p>
             </div>
