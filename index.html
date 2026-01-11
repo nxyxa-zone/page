@@ -3,417 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LKPD & Portofolio - PJOK Fase E</title>
+    <title>Generator LKPD & Portofolio PJOK</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Klasik: Playfair Display (Judul) & Cormorant Garamond (Isi) -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
     <style>
-        :root {
-            --paper-color: #fdfbf7;
-            --ink-color: #2c1810;
-            --accent-color: #8b4513;
-        }
-        body { 
-            font-family: 'Cormorant Garamond', serif; 
-            background-color: #eaddcf; 
-            color: var(--ink-color);
-        }
-        h1, h2, h3, h4, .font-heading {
-            font-family: 'Playfair Display', serif;
-        }
-        .paper-sheet {
-            background-color: var(--paper-color);
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23dccfc1' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15), 0 0 0 1px rgba(139, 69, 19, 0.1);
-        }
-        .classic-border {
-            border: 3px double var(--ink-color);
-        }
-        .section-title {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 1rem;
-            padding-bottom: 0.25rem;
-            border-bottom: 2px solid var(--accent-color);
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .signature-pad {
-            border: 2px dashed #a1887f;
-            background-color: rgba(255,255,255,0.5);
+            border: 2px dashed #94a3b8;
+            background-color: #ffffff;
             touch-action: none;
+            cursor: crosshair;
         }
-        /* Custom Checkbox */
-        input[type="checkbox"] {
-            accent-color: var(--ink-color);
-            width: 1.2rem;
-            height: 1.2rem;
-            cursor: pointer;
-        }
-        /* Form Inputs */
-        input[type="text"], input[type="date"], textarea, select {
-            background: transparent !important;
-            border: none !important;
-            border-bottom: 1px dashed var(--ink-color) !important;
-            font-family: 'Cormorant Garamond', serif;
-            color: var(--ink-color);
-            border-radius: 0 !important;
-        }
-        input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus {
-            outline: none;
-            border-bottom: 2px solid var(--accent-color) !important;
-            background-color: rgba(255,255,200,0.2) !important;
+        /* Custom Grid untuk kerapian titik dua */
+        .identity-grid {
+            display: grid;
+            grid-template-columns: 140px 20px 1fr;
+            align-items: center;
+            row-gap: 1rem;
         }
 
         @media print {
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
-            .paper-sheet { 
-                box-shadow: none; 
-                margin: 0; 
-                width: 100%;
-                max-width: 100%;
-                border: none;
-                background-image: none; /* Hemat tinta */
-            }
+            .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .main-card { box-shadow: none !important; border: none !important; border-radius: 0; }
+            textarea, select, input { border: 1px solid #cbd5e1 !important; background: transparent !important; -webkit-appearance: none; }
+            .section-break { page-break-inside: avoid; }
+            
+            /* Sembunyikan placeholder saat print */
             input::placeholder, textarea::placeholder { color: transparent; }
+            
+            /* Paksa background color tercetak */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
-<body class="py-8 px-4 min-h-screen">
+<body class="py-8 px-4 min-h-screen relative">
 
-    <!-- LOGIN & ADMIN PANEL (Fixed Top) -->
-    <div class="fixed top-4 right-4 z-50 no-print flex flex-col items-end gap-2">
-        
-        <!-- Tombol Login -->
-        <button id="btnLogin" onclick="showLoginModal()" class="bg-[#3e2723] text-[#fdfbf7] px-4 py-2 rounded-full shadow-lg font-heading tracking-wide hover:bg-[#5d4037] transition-all border-2 border-[#8b4513] flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-            Akses Guru
-        </button>
+    <!-- TOMBOL AKSES GURU (Floating & Z-Index Tinggi) -->
+    <button onclick="openLoginModal()" id="btn-login" class="fixed top-4 right-4 z-[999] bg-slate-800 text-white px-5 py-3 rounded-full shadow-2xl text-xs font-bold uppercase tracking-wider hover:bg-slate-700 hover:scale-105 transition-all no-print flex items-center gap-2 border-2 border-slate-600 cursor-pointer">
+        🔒 Akses Guru
+    </button>
 
-        <!-- Admin Dashboard (Hidden by default) -->
-        <div id="adminPanel" class="hidden bg-[#3e2723] text-[#fdfbf7] p-4 rounded-xl shadow-2xl w-72 border-2 border-[#8b4513] mt-2">
-            <div class="flex justify-between items-center mb-3 border-b border-[#8b4513] pb-2">
-                <h3 class="font-heading font-bold text-lg text-[#d7ccc8]">Dashboard Guru</h3>
-                <button onclick="logout()" class="text-xs text-red-300 hover:text-red-100">Keluar</button>
-            </div>
-            <div class="space-y-3">
-                <label class="text-xs uppercase tracking-widest text-[#a1887f]">Pilih Modul Ajar:</label>
-                <select id="meetingSelector" onchange="loadMeetingData()" class="w-full bg-[#5d4037] !border-none text-[#fdfbf7] p-2 rounded text-lg font-bold cursor-pointer hover:bg-[#6d4c41]">
-                    <option value="1">Pertemuan 1 (Dasar)</option>
-                    <option value="2">Pertemuan 2 (Teknik)</option>
-                    <option value="3">Pertemuan 3 (Game)</option>
-                </select>
-                <p class="text-[10px] text-[#a1887f] italic text-center mt-2">Hanya guru yang dapat melihat panel ini.</p>
+    <!-- MODAL LOGIN (PENGGANTI PROMPT) -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center no-print backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm border-t-4 border-blue-600">
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Verifikasi Guru</h3>
+            <p class="text-sm text-slate-500 mb-4">Masukkan PIN untuk mengakses panel kontrol.</p>
+            
+            <input type="password" id="pin-input" class="w-full border-2 border-slate-300 rounded-lg p-3 text-center text-2xl font-bold tracking-[0.5em] mb-4 focus:border-blue-500 focus:outline-none" maxlength="6" placeholder="******">
+            
+            <div class="flex gap-3">
+                <button onclick="closeLoginModal()" class="flex-1 py-2 rounded-lg border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 transition">Batal</button>
+                <button onclick="checkPin()" class="flex-1 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition">Masuk</button>
             </div>
         </div>
     </div>
 
-    <!-- PIN MODAL -->
-    <div id="pinModal" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center backdrop-blur-sm no-print">
-        <div class="bg-[#fdfbf7] p-8 rounded-lg shadow-2xl max-w-sm w-full text-center border-4 double border-[#3e2723]">
-            <h3 class="font-heading text-2xl font-bold mb-4 text-[#3e2723]">Verifikasi Guru</h3>
-            <p class="mb-4 text-[#5d4037] italic">Masukkan PIN keamanan untuk mengubah materi.</p>
-            <input type="password" id="pinInput" class="w-full text-center text-2xl tracking-[0.5em] font-bold p-2 mb-6 !border-b-2 !border-[#3e2723]" maxlength="6" placeholder="******">
-            <div class="flex gap-2 justify-center">
-                <button onclick="closeLoginModal()" class="px-4 py-2 text-[#5d4037] hover:bg-gray-200 rounded">Batal</button>
-                <button onclick="checkPin()" class="px-6 py-2 bg-[#3e2723] text-[#fdfbf7] font-bold rounded hover:bg-[#5d4037]">Masuk</button>
+    <div class="max-w-5xl mx-auto container space-y-6">
+        
+        <!-- CONTROL PANEL (Tersembunyi by default) -->
+        <div id="teacher-panel" class="hidden bg-slate-900 text-white p-5 rounded-xl shadow-xl no-print flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-blue-500 transition-all duration-300">
+            <div>
+                <h2 class="font-bold text-lg text-blue-400">🎛️ GENERATOR LKPD OTOMATIS</h2>
+                <div class="flex items-center gap-2">
+                    <p class="text-xs text-slate-400">Mode Guru Aktif • Sesuai Modul Ajar (6 JP)</p>
+                    <button onclick="logout()" class="text-[10px] bg-red-600 px-2 py-0.5 rounded hover:bg-red-500">Keluar</button>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <div class="w-full">
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Pilih Pertemuan:</label>
+                    <select id="meetingSelector" onchange="loadMeetingData()" class="bg-slate-800 border border-slate-700 text-white text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-pointer hover:bg-slate-700 transition">
+                        <option value="1">Pertemuan 1: Sejarah & Teknik Dasar (Grip/Stance)</option>
+                        <option value="2">Pertemuan 2: Pukulan Spesifik (Lob, Dropshot, Netting)</option>
+                        <option value="3">Pertemuan 3: Smash, Peraturan & Game</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- MAIN PAPER SHEET -->
-    <div class="max-w-4xl mx-auto container paper-sheet min-h-[1123px] relative p-10 md:p-16">
-        
-        <!-- Border Hiasan -->
-        <div class="absolute top-4 left-4 right-4 bottom-4 classic-border pointer-events-none"></div>
-        <div class="absolute top-5 left-5 right-5 bottom-5 border border-[#3e2723] pointer-events-none opacity-50"></div>
-
-        <!-- Header -->
-        <header class="text-center mb-10 relative z-10 border-b-2 border-[#3e2723] pb-6">
-            <h1 class="text-3xl md:text-4xl font-heading font-black mb-2 tracking-wide uppercase leading-tight">LEMBAR KERJA PESERTA DIDIK (LKPD) <br>& PORTOFOLIO PJOK</h1>
-            <p class="text-lg md:text-xl font-heading italic text-[#5d4037] mt-2">Materi: Bulu Tangkis (Fase E - Kelas X)</p>
-        </header>
-
-        <!-- Identity Section -->
-        <section class="mb-10 relative z-10">
-            <div class="flex flex-col md:flex-row justify-between items-start gap-8">
-                <!-- Grid untuk Identitas yang Sejajar -->
-                <div class="w-full md:w-2/3 grid grid-cols-[100px_10px_auto] gap-y-3 items-center">
-                    
-                    <label class="font-heading font-bold text-lg">Nama</label>
-                    <span class="font-bold text-center">:</span>
-                    <input type="text" class="w-full text-xl px-2 bg-transparent" placeholder="Tulis nama lengkap...">
-                    
-                    <label class="font-heading font-bold text-lg">Kelas</label>
-                    <span class="font-bold text-center">:</span>
-                    <input type="text" class="w-full text-xl px-2 bg-transparent" placeholder="Contoh: X - 1">
-
-                    <label class="font-heading font-bold text-lg">Tanggal</label>
-                    <span class="font-bold text-center">:</span>
-                    <input type="date" id="studentDate" class="w-full text-lg px-2 bg-transparent uppercase">
-                </div>
-
-                <div class="w-full md:w-1/3 text-right">
-                    <div class="inline-block border-2 border-[#3e2723] p-3 transform rotate-1 bg-white/50 shadow-sm text-center min-w-[180px]">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#8b4513] mb-1">Topik Pembelajaran</p>
-                        <p id="display-meeting-title" class="font-heading text-lg font-bold text-[#3e2723]">Pertemuan 1</p>
-                    </div>
+        <!-- AREA DOKUMEN LKPD -->
+        <div class="bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-300 main-card relative min-h-[1000px]">
+            
+            <!-- Header Dokumen -->
+            <div class="p-8 border-b-2 border-black relative text-center">
+                <!-- Logo Sekolah Placeholder -->
+                <div class="hidden md:block absolute top-6 left-8 w-16 h-16 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-500 font-bold border border-slate-300">LOGO<br>SEKOLAH</div>
+                
+                <h1 class="text-2xl font-black text-black tracking-tight uppercase mb-1">LEMBAR KERJA PESERTA DIDIK (LKPD)<br>& PORTOFOLIO PJOK</h1>
+                <h2 class="text-lg font-bold text-slate-700 uppercase tracking-wider">Pendidikan Jasmani, Olahraga, dan Kesehatan</h2>
+                
+                <div class="mt-4 flex justify-center gap-4 text-sm font-semibold text-slate-600">
+                    <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Fase E (Kelas X)</span>
+                    <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Materi: Permainan Net (Bulu Tangkis)</span>
                 </div>
             </div>
-        </section>
 
-        <!-- Content Area -->
-        <div class="space-y-10 relative z-10">
-
-            <!-- I. Materi -->
-            <section>
-                <h3 class="font-heading text-2xl font-bold text-[#3e2723] section-title">I. Ringkasan Materi</h3>
-                <div id="content-materi" class="text-lg leading-relaxed text-justify space-y-4">
-                    <!-- Injected JS -->
-                </div>
-            </section>
-
-            <!-- II. Aktivitas -->
-            <section>
-                <h3 class="font-heading text-2xl font-bold text-[#3e2723] section-title">II. Panduan Praktik</h3>
-                <p class="italic mb-4 text-[#5d4037]">Instruksi lapangan (lakukan secara berpasangan/kelompok):</p>
-                <div id="content-aktivitas" class="grid grid-cols-1 gap-4">
-                    <!-- Injected JS -->
-                </div>
-            </section>
-
-            <!-- III. Refleksi -->
-            <section>
-                <h3 class="font-heading text-2xl font-bold text-[#3e2723] section-title">III. Refleksi & Analisis</h3>
-                <div id="content-soal" class="space-y-6">
-                    <!-- Injected JS -->
-                </div>
-            </section>
-
-            <!-- IV. Rubrik -->
-            <section>
-                <h3 class="font-heading text-2xl font-bold text-[#3e2723] section-title">IV. Penilaian Karakter</h3>
-                <div class="border-2 border-[#3e2723]">
-                    <table class="w-full text-left">
-                        <thead class="bg-[#3e2723] text-[#fdfbf7]">
-                            <tr>
-                                <th class="p-3 font-heading tracking-wide border-r border-[#fdfbf7]">Indikator Profil Pelajar Pancasila</th>
-                                <th class="p-3 w-16 text-center border-r border-[#fdfbf7]">Ya</th>
-                                <th class="p-3 w-16 text-center">Tidak</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-[#3e2723] text-lg">
-                            <tr>
-                                <td class="p-3 border-r border-[#3e2723]"><strong>Mandiri:</strong> Menyiapkan alat sendiri & serius saat pemanasan.</td>
-                                <td class="p-3 text-center border-r border-[#3e2723]"><input type="checkbox"></td>
-                                <td class="p-3 text-center"><input type="checkbox"></td>
-                            </tr>
-                            <tr>
-                                <td class="p-3 border-r border-[#3e2723]"><strong>Gotong Royong:</strong> Membantu teman & merapikan lapangan.</td>
-                                <td class="p-3 text-center border-r border-[#3e2723]"><input type="checkbox"></td>
-                                <td class="p-3 text-center"><input type="checkbox"></td>
-                            </tr>
-                             <tr>
-                                <td class="p-3 border-r border-[#3e2723]"><strong>Bernalar Kritis:</strong> Mampu menganalisis kesalahan gerak.</td>
-                                <td class="p-3 text-center border-r border-[#3e2723]"><input type="checkbox"></td>
-                                <td class="p-3 text-center"><input type="checkbox"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- V. Hasil & TTD -->
-            <section class="mt-12 pt-8 border-t-2 border-double border-[#3e2723]">
-                <div class="flex flex-col md:flex-row gap-8">
+            <div class="p-8 md:p-10 space-y-8">
+                
+                <!-- Identitas & Info Pertemuan (Grid Layout Fixed) -->
+                <div class="flex flex-col md:flex-row justify-between items-start gap-6 border-b-2 border-dashed border-slate-300 pb-6 section-break">
                     
-                    <!-- Penilaian Guru -->
-                    <div class="flex-1 bg-[#3e2723]/5 p-6 rounded border border-[#3e2723]">
-                        <h4 class="font-heading font-bold text-xl mb-4 border-b border-[#3e2723] pb-2">Evaluasi Instruktur</h4>
+                    <!-- Form Identitas dengan Grid Alignment -->
+                    <div class="w-full md:w-2/3 identity-grid">
                         
-                        <div class="mb-6">
-                            <label class="block font-bold mb-2 uppercase tracking-wider text-sm">Predikat & Nilai Angka:</label>
-                            <select class="w-full text-xl font-bold bg-transparent !border-b-2 !border-[#3e2723] py-2">
-                                <option value="">-- Berikan Nilai --</option>
-                                <option value="A">A (Sangat Baik) | 91 - 100</option>
-                                <option value="B">B (Baik) | 81 - 90</option>
-                                <option value="C">C (Cukup) | 71 - 80</option>
-                                <option value="D">D (Kurang) | < 70</option>
-                            </select>
-                        </div>
+                        <label class="text-sm font-bold text-slate-700 uppercase">Nama Siswa</label>
+                        <div class="text-center font-bold">:</div>
+                        <input type="text" class="w-full border-b border-black outline-none px-2 py-1 bg-transparent focus:bg-blue-50" placeholder="Tulis nama lengkap...">
 
-                        <div>
-                            <label class="block font-bold mb-2 uppercase tracking-wider text-sm">Catatan Khusus:</label>
-                            <textarea class="w-full h-24 text-lg italic" placeholder="Tuliskan umpan balik untuk siswa..."></textarea>
-                        </div>
+                        <label class="text-sm font-bold text-slate-700 uppercase">Kelas / No. Absen</label>
+                        <div class="text-center font-bold">:</div>
+                        <input type="text" class="w-full border-b border-black outline-none px-2 py-1 bg-transparent focus:bg-blue-50" placeholder="Contoh: X - 1 / 15">
+
+                        <label class="text-sm font-bold text-slate-700 uppercase">Tanggal Praktik</label>
+                        <div class="text-center font-bold">:</div>
+                        <input type="date" id="student-date" class="w-full border-b border-black outline-none px-2 py-1 bg-transparent focus:bg-blue-50 uppercase text-slate-700 cursor-pointer">
+                    
                     </div>
 
-                    <!-- Tanda Tangan -->
-                    <div class="flex gap-8 justify-center md:justify-end items-end">
-                        <div class="text-center w-40 flex flex-col justify-end">
-                            <canvas id="sig-siswa" class="signature-pad w-full h-24 mb-2"></canvas>
-                            <div class="border-t border-[#3e2723] pt-1">
-                                <p class="text-sm font-bold uppercase">Siswa</p>
-                            </div>
-                            <button onclick="clearSig('sig-siswa')" class="no-print text-xs text-red-800 hover:underline mt-1">Hapus</button>
-                        </div>
-                        <div class="text-center w-48 flex flex-col justify-end">
-                            <canvas id="sig-guru" class="signature-pad w-full h-24 mb-2"></canvas>
-                            <div class="border-t border-[#3e2723] pt-1">
-                                <p class="text-sm font-bold uppercase">Guru Pengampu</p>
-                                <span class="text-xs block font-bold">M. Nanda S.N., S.Kom.</span>
-                            </div>
-                            <button onclick="clearSig('sig-guru')" class="no-print text-xs text-red-800 hover:underline mt-1">Hapus</button>
-                        </div>
+                    <div class="w-full md:w-1/3 bg-slate-50 p-3 border border-slate-200 rounded text-center self-center">
+                        <p class="text-xs text-slate-500 uppercase font-bold mb-1">Topik Pertemuan</p>
+                        <p id="display-meeting-title" class="text-sm font-bold text-blue-700">Pertemuan 1</p>
                     </div>
                 </div>
-            </section>
 
+                <!-- I. RINGKASAN MATERI (Bahan Catatan) -->
+                <section class="section-break">
+                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">I. Ringkasan Materi (Bahan Catatan)</h3>
+                    <div id="content-materi" class="bg-slate-50 p-5 rounded border border-slate-200 text-sm text-slate-800 leading-relaxed text-justify">
+                        <!-- Diisi via JS -->
+                    </div>
+                </section>
+
+                <!-- II. PANDUAN AKTIVITAS PRAKTIK (Kartu Tugas) -->
+                <section class="section-break">
+                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">II. Panduan Aktivitas Praktik (Kartu Tugas)</h3>
+                    <div class="space-y-4">
+                        <p class="text-sm text-slate-600 italic">Lakukan aktivitas berikut sesuai instruksi guru dan catat hasil/kesulitan yang ditemukan:</p>
+                        <div id="content-aktivitas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Diisi via JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- III. TUGAS PORTOFOLIO (Refleksi Mandiri) -->
+                <section class="section-break">
+                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">III. Tugas Portofolio (Refleksi Mandiri)</h3>
+                    <div id="content-soal" class="space-y-5">
+                        <!-- Diisi via JS -->
+                    </div>
+                </section>
+
+                <!-- IV. RUBRIK PENILAIAN MANDIRI (Checklist) -->
+                <section class="section-break">
+                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">IV. Rubrik Penilaian Mandiri (Checklist)</h3>
+                    <div class="border border-black rounded-sm overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-200 text-black border-b border-black text-xs font-bold uppercase">
+                                <tr>
+                                    <th class="p-2 border-r border-black w-8 text-center">No</th>
+                                    <th class="p-2 border-r border-black text-left">Pernyataan (Profil Pelajar Pancasila)</th>
+                                    <th class="p-2 w-20 text-center border-r border-black">Ya</th>
+                                    <th class="p-2 w-20 text-center">Tidak</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-black text-slate-800">
+                                <tr>
+                                    <td class="p-2 text-center border-r border-black font-semibold">1</td>
+                                    <td class="p-2 border-r border-black">
+                                        <strong>Mandiri:</strong> Saya mempersiapkan raket/shuttlecock sendiri dan melakukan pemanasan dengan sungguh-sungguh tanpa disuruh.
+                                    </td>
+                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 text-center border-r border-black font-semibold">2</td>
+                                    <td class="p-2 border-r border-black">
+                                        <strong>Gotong Royong:</strong> Saya membantu teman yang kesulitan melakukan teknik dan merapikan alat kembali setelah digunakan.
+                                    </td>
+                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 text-center border-r border-black font-semibold">3</td>
+                                    <td class="p-2 border-r border-black">
+                                        <strong>Bernalar Kritis:</strong> Saya mampu menjelaskan letak kesalahan saya sendiri saat pukulan kok tidak masuk/menyangkut.
+                                    </td>
+                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 text-center border-r border-black font-semibold">4</td>
+                                    <td class="p-2 border-r border-black">
+                                        <strong>Tanggung Jawab:</strong> Saya datang tepat waktu dan memakai pakaian olahraga lengkap sesuai aturan.
+                                    </td>
+                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- V. HASIL BELAJAR (NILAI & TTD) -->
+                <section class="pt-6 mt-6 border-t-2 border-black flex flex-col md:flex-row justify-between gap-8 section-break">
+                    
+                    <!-- Area Penilaian Guru -->
+                    <div class="flex-1 border border-slate-300 bg-slate-50 p-4 rounded relative">
+                        <div class="absolute -top-3 left-3 bg-slate-50 px-2 text-xs font-bold text-slate-500 uppercase">Verifikasi Guru</div>
+                        
+                        <div class="flex items-center justify-between gap-4 mb-4">
+                            <div class="w-1/2">
+                                <label class="font-bold text-xs text-slate-700 block mb-1">Predikat:</label>
+                                <select class="w-full border border-slate-400 rounded px-2 py-1 text-sm font-bold bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <option value="">- Pilih -</option>
+                                    <option value="A">A (Sangat Baik)</option>
+                                    <option value="B">B (Baik)</option>
+                                    <option value="C">C (Cukup)</option>
+                                    <option value="D">D (Perlu Bimbingan)</option>
+                                </select>
+                            </div>
+                            <div class="w-1/2">
+                                <label class="font-bold text-xs text-slate-700 block mb-1">Nilai Angka (0-100):</label>
+                                <input type="number" min="0" max="100" class="w-full border border-slate-400 rounded px-2 py-1 text-sm font-bold bg-white focus:ring-2 focus:ring-blue-500 outline-none text-center" placeholder="0">
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="font-bold text-sm text-slate-700">Catatan/Umpan Balik:</label>
+                            <textarea class="w-full bg-white border border-slate-300 rounded p-2 text-sm h-20 outline-none resize-none focus:border-blue-500" placeholder="Berikan catatan evaluasi teknik..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Area Tanda Tangan -->
+                    <div class="flex gap-4">
+                        <div class="text-center">
+                            <p class="text-xs font-bold text-slate-500 uppercase mb-2">Siswa</p>
+                            <canvas id="sig-siswa" class="signature-pad w-32 h-20 bg-white rounded border border-slate-300"></canvas>
+                            <button onclick="clearSig('sig-siswa')" class="no-print text-[10px] text-red-500 font-bold mt-1 hover:underline">Hapus</button>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-xs font-bold text-slate-500 uppercase mb-2">Guru PJOK</p>
+                            <canvas id="sig-guru" class="signature-pad w-32 h-20 bg-white rounded border border-slate-300"></canvas>
+                            <p class="text-xs font-bold mt-1">M. Nanda S.N., S.Kom.</p>
+                            <button onclick="clearSig('sig-guru')" class="no-print text-[10px] text-red-500 font-bold mt-1 hover:underline">Hapus</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tombol Print -->
+                <div class="no-print pt-4 pb-12">
+                    <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded shadow-lg flex items-center justify-center gap-2 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H5a2 2 0 012 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        SIMPAN PDF (CETAK)
+                    </button>
+                    <p class="text-center text-xs text-slate-400 mt-2">Tips: Atur skala printer ke "Default" atau "100%" agar pas di A4.</p>
+                </div>
+
+            </div>
         </div>
-
-        <!-- Print Button -->
-        <div class="mt-12 text-center no-print relative z-10">
-            <button onclick="window.print()" class="bg-[#3e2723] text-[#fdfbf7] font-heading font-bold py-4 px-8 text-xl shadow-xl hover:bg-[#5d4037] transition-transform transform hover:-translate-y-1 active:translate-y-0 rounded-sm border-2 border-[#8b4513]">
-                🖨️ Cetak Dokumen (PDF)
-            </button>
-        </div>
-
+        <p class="text-center text-slate-400 text-[10px] mt-6 mb-10 tracking-widest uppercase">&copy; 2026 Modul Ajar PJOK Fase E</p>
     </div>
 
     <script>
-        // === LOGIKA KEAMANAN GURU ===
+        // === LOGIKA AKSES GURU (MODAL SYSTEM) ===
         const TEACHER_PIN = "270302";
 
-        function showLoginModal() {
-            document.getElementById('pinModal').classList.remove('hidden');
-            document.getElementById('pinInput').focus();
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('pin-input').focus();
         }
 
         function closeLoginModal() {
-            document.getElementById('pinModal').classList.add('hidden');
-            document.getElementById('pinInput').value = '';
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('pin-input').value = "";
         }
 
         function checkPin() {
-            const input = document.getElementById('pinInput').value;
+            const input = document.getElementById('pin-input').value;
             if (input === TEACHER_PIN) {
-                // Sukses
+                const panel = document.getElementById('teacher-panel');
+                const btn = document.getElementById('btn-login');
+                
                 closeLoginModal();
-                document.getElementById('btnLogin').classList.add('hidden'); // Sembunyikan tombol login
-                document.getElementById('adminPanel').classList.remove('hidden'); // Tampilkan dashboard
-                alert("Login Berhasil! Silakan pilih modul pertemuan.");
+                panel.classList.remove('hidden');
+                btn.classList.add('hidden'); 
+                
+                // Animasi kecil
+                panel.scrollIntoView({ behavior: 'smooth' });
             } else {
                 alert("PIN Salah! Akses ditolak.");
-                document.getElementById('pinInput').value = '';
+                document.getElementById('pin-input').value = "";
             }
         }
 
         function logout() {
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('btnLogin').classList.remove('hidden');
-            location.reload(); // Refresh halaman ke default
+            document.getElementById('teacher-panel').classList.add('hidden');
+            document.getElementById('btn-login').classList.remove('hidden');
+            document.getElementById('meetingSelector').value = "1"; // Reset ke pertemuan 1
+            loadMeetingData();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Support Enter key di PIN
-        document.getElementById('pinInput').addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
+        // Support Enter key di PIN Input
+        document.getElementById('pin-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
                 checkPin();
             }
         });
 
-
-        // === DATA RPP ===
+        // === DATA SESUAI RPP ===
         const rppData = {
             1: {
-                title: "Pertemuan 1: Dasar & Sejarah",
+                title: "Pertemuan 1: Sejarah & Teknik Dasar",
                 materi: `
-                    <p><strong>1. Sejarah Singkat:</strong> Permainan bulu tangkis modern dikembangkan di Inggris, namun akarnya berasal dari permainan 'Poona' di India. Organisasi induk dunia adalah BWF, dan di Indonesia adalah PBSI (1951).</p>
-                    <p><strong>2. Teknik Grip (Pegangan):</strong> 
-                        <br><em>a. Forehand:</em> Memegang raket miring seperti berjabat tangan (Huruf V).
-                        <br><em>b. Backhand:</em> Ibu jari menekan pada permukaan lebar gagang raket untuk tenaga dorong.
-                    </p>
-                    <p><strong>3. Stance (Sikap Berdiri):</strong> Kaki dibuka selebar bahu, lutut ditekuk, titik berat badan di tengah.</p>`,
+                    <div class="mb-4">
+                        <h4 class="font-bold text-blue-800 mb-1">1. Sejarah Singkat</h4>
+                        <p class="mb-2">Permainan bulu tangkis berasal dari India (Poona) dan dikembangkan di Inggris. Organisasi dunia bernama BWF (Badminton World Federation), sedangkan di Indonesia adalah PBSI (Persatuan Bulutangkis Seluruh Indonesia) yang berdiri tahun 1951.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-bold text-blue-800 mb-1">2. Posisi Berdiri (Stance)</h4>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li>Kaki dibuka selebar bahu dengan lutut sedikit ditekuk.</li>
+                            <li>Berat badan bertumpu di tengah agar mudah bergerak ke segala arah.</li>
+                            <li>Posisi siap (ready position) raket berada di depan dada.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-800 mb-1">3. Teknik Pegangan (Grip)</h4>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li><strong>Forehand Grip:</strong> Raket dipegang miring seperti sedang "berjabat tangan". Huruf V antara ibu jari dan telunjuk berada di bagian atas gagang.</li>
+                            <li><strong>Backhand Grip:</strong> Ibu jari diputar dan menekan pada permukaan yang lebar pada gagang raket untuk menambah tenaga dorongan.</li>
+                        </ul>
+                    </div>`,
                 aktivitas: [
-                    { t: "Shadow Badminton", d: "Gerakan kaki dan ayunan raket tanpa bola (6 titik lapangan)." },
-                    { t: "Grip Switching", d: "Latihan memutar raket dari forehand ke backhand dengan cepat." },
-                    { t: "Servis Pendek", d: "Servis menyilang (cross court) melewati garis servis lawan." }
+                    { title: "Shadow Badminton (Bayangan)", desc: "Melakukan gerakan langkah kaki (footwork) ke 6 titik sudut lapangan dan ayunan raket tanpa bola untuk melatih kelincahan." },
+                    { title: "Grip Switching Drill", desc: "Siswa memutar raket mengubah pegangan forehand ke backhand berulang kali dengan cepat (durasi 1 menit)." },
+                    { title: "Service Pendek Berpasangan", desc: "Melakukan servis pendek menyilang (cross court) melewati garis servis depan lawan. Lakukan 10x percobaan." }
                 ],
                 soal: [
-                    "Jelaskan perbedaan posisi ibu jari pada grip Forehand vs Backhand!",
-                    "Mengapa lutut harus ditekuk saat posisi siap (stance)?"
+                    "Jelaskan secara singkat perbedaan posisi ibu jari pada pegangan Forehand dan Backhand!",
+                    "Mengapa posisi lutut harus ditekuk (stance) saat menunggu bola dari lawan? Apa akibatnya jika berdiri tegak lurus?",
+                    "Sebutkan satu kesulitan utama yang kamu rasakan saat melakukan servis pendek!"
                 ]
             },
             2: {
-                title: "Pertemuan 2: Teknik Pukulan",
+                title: "Pertemuan 2: Teknik Pukulan Spesifik",
                 materi: `
-                    <p><strong>1. Lob (Clear):</strong> Pukulan tinggi ke arah garis belakang lawan. Digunakan untuk bertahan atau mengatur napas.</p>
-                    <p><strong>2. Drop Shot:</strong> Pukulan tipuan (gerakan seperti smash) namun bola dipukul halus agar jatuh tepat di dekat net lawan.</p>
-                    <p><strong>3. Netting:</strong> Permainan halus di depan net. Kunci utamanya adalah 'rasa' (feeling) agar bola bergulir tipis di bibir net.</p>`,
+                    <p class="mb-3 font-semibold italic text-slate-600">Berikut adalah definisi teknik berdasarkan Glosarium Modul Ajar:</p>
+                    <div class="mb-4">
+                        <h4 class="font-bold text-blue-800 mb-1">1. Pukulan Lob (Clear)</h4>
+                        <p class="mb-1"><strong>Definisi:</strong> Pukulan yang mengarah jauh ke belakang garis lapangan lawan.</p>
+                        <p><strong>Tujuan:</strong> Mendesak lawan ke area belakang sehingga area depan kosong, atau untuk memperbaiki posisi bertahan (defensive lob).</p>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-bold text-blue-800 mb-1">2. Drop Shot</h4>
+                        <p class="mb-1"><strong>Definisi:</strong> Pukulan yang rendah, mengarahkan kok jatuh tipis di dekat jaring (net) lawan.</p>
+                        <p><strong>Kunci Teknik:</strong> Gerakan awal sama seperti smash (tipuan), namun saat perkenaan bola, tenaga dikurangi (disentuh halus).</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-800 mb-1">3. Net Play (Netting)</h4>
+                        <p class="mb-1"><strong>Definisi:</strong> Permainan atau pukulan pendek yang dilakukan tepat di depan net.</p>
+                        <p><strong>Kunci Teknik:</strong> Mengambil bola setinggi mungkin di bibir net agar lawan sulit mengembalikan (rambut net).</p>
+                    </div>`,
                 aktivitas: [
-                    { t: "Drill Lob", d: "Saling memukul bola lambung tinggi ke garis belakang (baseline)." },
-                    { t: "Target Drop Shot", d: "Menjatuhkan bola ke dalam keranjang di sudut depan net." },
-                    { t: "Net Play", d: "Permainan 1 lawan 1 khusus area depan net (tidak boleh smash)." }
+                    { title: "Drill Lob to Lob", desc: "Saling berhadapan, memukul bola melambung tinggi ke garis belakang (baseline) secara terus menerus tanpa bola mati." },
+                    { title: "Target Drop Shot", desc: "Satu siswa memberikan umpan lambung, siswa lain melakukan dropshot yang diarahkan ke keranjang/target di sudut depan net." },
+                    { title: "Permainan Net (Netting)", desc: "Bermain 1 lawan 1 hanya di area depan (garis servis ke net). Bola tidak boleh dipukul keras, hanya sentuhan halus." }
                 ],
                 soal: [
-                    "Apa perbedaan tenaga yang dipakai saat Smash dibandingkan Drop Shot?",
-                    "Jelaskan strategi menggunakan Lob saat kamu terdesak!"
+                    "Berdasarkan praktik tadi, jelaskan perbedaan tenaga yang digunakan saat melakukan Lob dibandingkan Drop Shot!",
+                    "Apa yang terjadi jika kamu mengambil bola Netting terlalu rendah (sudah jauh turun dari bibir net)?",
+                    "Jelaskan strategi menggunakan Drop Shot untuk mengecoh lawan!"
                 ]
             },
             3: {
-                title: "Pertemuan 3: Game & Taktik",
+                title: "Pertemuan 3: Pukulan Keras & Permainan",
                 materi: `
-                    <p><strong>1. Smash:</strong> Pukulan menyerang terkuat. Menukik tajam ke bawah dengan kekuatan penuh dari posisi overhead.</p>
-                    <p><strong>2. Peraturan Skor:</strong> Menggunakan sistem <em>Rally Point</em> 2 x 21. Jika 20-20, terjadi Deuce (selisih 2 poin).</p>
-                    <p><strong>3. Fault (Pelanggaran):</strong> Raket menyentuh net, kok tersangkut di net, menginjak garis saat servis.</p>`,
+                    <div class="mb-4">
+                        <h4 class="font-bold text-blue-800 mb-1">1. Smash</h4>
+                        <p>Pukulan overhead yang dilakukan dengan kekuatan penuh ke arah bawah lapangan lawan secara tajam. Titik perkenaan bola harus berada di titik tertinggi jangkauan lengan.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="font-bold text-blue-800 mb-1">2. Drive</h4>
+                        <p>Pukulan datar dan cepat yang melintas tipis di atas net. Biasanya digunakan dalam permainan ganda untuk menekan lawan atau mengembalikan smash.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-blue-800 mb-1">3. Peraturan Permainan Dasar</h4>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li><strong>Sistem Skor:</strong> Rally Point 2 x 21 (Deuce jika 20-20).</li>
+                            <li><strong>Area Servis:</strong> Ganda (lebar dan pendek), Tunggal (panjang dan sempit).</li>
+                            <li><strong>Fault (Pelanggaran):</strong> Raket menyentuh net, kok tersangkut, kaki menginjak garis saat servis, kok keluar lapangan (out).</li>
+                        </ul>
+                    </div>`,
                 aktivitas: [
-                    { t: "Smash & Defense", d: "Satu menyerang (smash), satu bertahan (mengembalikan bola)." },
-                    { t: "Game Simulasi", d: "Bermain dengan skor 11 poin, menerapkan aturan in/out." },
-                    { t: "Perwasitan", d: "Siswa menjadi wasit utama dan hakim garis." }
+                    { title: "Smash & Defense Drill", desc: "Satu siswa melakukan smash berulang kali, siswa lain melatih pertahanan (defense) dengan mengembalikan bola." },
+                    { title: "Simulasi Game (Set Pendek)", desc: "Bermain ganda/tunggal dengan poin 11. Fokus pada penerapan aturan pindah bola dan hitungan poin." },
+                    { title: "Tugas Wasit & Hakim Garis", desc: "Siswa yang tidak bermain bertugas menjadi wasit (meneriakkan skor) dan hakim garis (menilai in/out)." }
                 ],
                 soal: [
-                    "Sebutkan 3 jenis kesalahan (fault) yang memberi poin ke lawan!",
-                    "Bagaimana sikap sportif saat menerima keputusan wasit yang merugikan?"
+                    "Apa perbedaan utama arah bola pukulan Smash dibandingkan dengan pukulan Drive?",
+                    "Sebutkan 3 contoh kesalahan (fault) yang memberikan poin bagi lawan dalam permainan bulu tangkis!",
+                    "Bagaimana sikap sportivitas yang harus ditunjukkan jika bola lawan jatuh tepat di garis (masuk) namun kamu ragu?"
                 ]
             }
         };
 
+        // FUNGSI GANTI KONTEN
         function loadMeetingData() {
             const id = document.getElementById('meetingSelector').value;
             const data = rppData[id];
 
+            // 1. Update Judul
             document.getElementById('display-meeting-title').innerText = data.title;
+            
+            // 2. Update Materi
             document.getElementById('content-materi').innerHTML = data.materi;
 
+            // 3. Update Aktivitas
             const actContainer = document.getElementById('content-aktivitas');
             actContainer.innerHTML = '';
             data.aktivitas.forEach((act, idx) => {
                 actContainer.innerHTML += `
-                    <div class="flex gap-4 items-start border-l-4 border-[#8b4513] pl-4 py-2 bg-[#8b4513]/5">
-                        <span class="font-heading font-bold text-xl text-[#8b4513]">0${idx+1}.</span>
-                        <div>
-                            <h4 class="font-bold text-lg leading-none mb-1">${act.t}</h4>
-                            <p class="text-sm">${act.d}</p>
+                    <div class="bg-white border border-slate-200 p-3 rounded shadow-sm">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded">${idx + 1}</span>
+                            <h4 class="font-bold text-sm text-slate-800">${act.title}</h4>
                         </div>
-                    </div>`;
+                        <p class="text-xs text-slate-600 ml-6 leading-relaxed">${act.desc}</p>
+                    </div>
+                `;
             });
 
+            // 4. Update Soal
             const soalContainer = document.getElementById('content-soal');
             soalContainer.innerHTML = '';
-            data.soal.forEach((q, idx) => {
+            data.soal.forEach((soal, idx) => {
                 soalContainer.innerHTML += `
-                    <div class="relative">
-                        <p class="font-bold mb-2 text-lg">${idx+1}. ${q}</p>
-                        <textarea class="w-full h-24 text-lg italic bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjI1cHgiPjxsaW5lIHgxPSIwIiB5MT0iMjUiIHgyPSIxMDAlIiB5Mj0iMjUiIHN0eWxlPSJzdHJva2U6IzNjMjcyMzdzdHJva2Utd2lkdGg6MXB4O3N0cm9rZS1kYXNoYXJyYXk6MiAyIiAvPjwvc3ZnPg==')] bg-local" style="line-height: 25px;" placeholder="Jawab di sini..."></textarea>
-                    </div>`;
+                    <div class="bg-white p-4 border border-slate-200 rounded relative">
+                        <span class="absolute top-4 left-4 font-bold text-sm text-slate-800">${idx + 1}.</span>
+                        <label class="font-bold text-sm text-slate-800 block mb-2 pl-6">${soal}</label>
+                        <textarea class="w-full border-b border-dashed border-slate-300 bg-transparent outline-none text-sm p-1 focus:border-blue-500 transition-colors pl-6" rows="3" placeholder="Jawab di sini..."></textarea>
+                    </div>
+                `;
             });
         }
 
-        // TANGGAL (MANUAL PILIH) & CANVAS
-        
-        // Set default date to today, but user can change it
-        document.getElementById('studentDate').valueAsDate = new Date();
+        // TANGGAL & CANVAS LOGIC
+        document.getElementById('student-date').valueAsDate = new Date();
 
         function setupSig(id) {
             const canvas = document.getElementById(id);
@@ -431,22 +472,30 @@
 
             const getPos = (e) => {
                 const rect = canvas.getBoundingClientRect();
-                return { x: (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left, y: (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top };
+                return {
+                    x: (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left,
+                    y: (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top
+                };
             };
-            const start = (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); if(e.cancelable) e.preventDefault(); };
-            const move = (e) => { if(!drawing) return; const p = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#2c1810'; ctx.lineTo(p.x, p.y); ctx.stroke(); if(e.cancelable) e.preventDefault(); };
+
+            const start = (e) => { drawing = true; ctx.beginPath(); const pos = getPos(e); ctx.moveTo(pos.x, pos.y); if(e.cancelable) e.preventDefault(); };
+            const move = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = 'black'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); if(e.cancelable) e.preventDefault(); };
             const end = () => drawing = false;
 
             canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
-            canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false}); canvas.addEventListener('touchend', end);
+            canvas.addEventListener('touchstart', start, {passive: false}); canvas.addEventListener('touchmove', move, {passive: false}); canvas.addEventListener('touchend', end);
         }
-        function clearSig(id) { const c = document.getElementById(id); const x = c.getContext('2d'); x.clearRect(0,0,c.width,c.height); }
+
+        function clearSig(id) {
+            const canvas = document.getElementById(id);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
         setupSig('sig-siswa');
         setupSig('sig-guru');
-        loadMeetingData(); // Load default
+        loadMeetingData(); // Init load
     </script>
 </body>
 </html>
-
 
