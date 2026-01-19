@@ -62,7 +62,7 @@
 <body class="py-8 px-4 min-h-screen relative">
 
     <!-- TOMBOL AKSES GURU -->
-    <button onclick="openLoginModal()" id="btn-login" class="fixed top-4 right-4 z-[50] bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-700 hover:scale-105 transition-all no-print flex items-center gap-2 border border-slate-600">
+    <button onclick="openLoginModal()" id="btn-login" class="fixed top-4 right-4 z-[50] bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-700 hover:scale-105 transition-all no-print flex items-center gap-2 border border-slate-600 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
@@ -412,7 +412,7 @@
             }
         });
 
-        // --- 1. SAVE FUNCTION FOR STUDENT (AND START LISTENER) ---
+        // Attach global functions
         window.saveStudentData = async function() {
             if (!currentUser) {
                 alert("Sedang menghubungkan ke database... coba lagi.");
@@ -460,26 +460,22 @@
             };
 
             try {
-                // Change UI to loading state
                 const btnSubmit = document.getElementById('btn-submit-lkpd');
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = 'Mengirim...';
 
                 const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), submissionData);
                 
-                // Success: Show Status Bar
                 const statusBar = document.getElementById('student-status-bar');
                 statusBar.classList.remove('hidden');
                 
-                // Hide Submit Button
                 btnSubmit.style.display = 'none';
                 document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
                 
-                // Lock Inputs
-                document.querySelectorAll('input, textarea, select').forEach(el => el.disabled = true);
+                // Lock Inputs ONLY in Main Card
+                document.querySelectorAll('.main-card input, .main-card textarea, .main-card select').forEach(el => el.disabled = true);
                 document.getElementById('btn-clear-sig').style.display = 'none';
 
-                // START LISTENING TO THIS DOCUMENT
                 watchSubmission(docRef.id);
 
             } catch (e) {
@@ -487,37 +483,30 @@
                 document.getElementById('btn-submit-lkpd').disabled = false;
                 document.getElementById('btn-submit-lkpd').innerHTML = 'KIRIM LKPD (UNTUK DINILAI GURU)';
             }
-        }
+        };
 
-        // --- REAL-TIME LISTENER ---
         function watchSubmission(docId) {
             onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
-                    
-                    // Check if graded
                     if (data.status === "Sudah Dinilai") {
-                        // Update UI with Grade
                         document.getElementById('student-predikat').value = data.predikat;
                         document.getElementById('student-nilai').value = data.nilai;
                         document.getElementById('student-catatan').innerText = data.catatan;
                         document.getElementById('student-catatan').classList.remove('italic', 'text-gray-400');
                         document.getElementById('student-catatan').classList.add('text-slate-800');
 
-                        // Update Visuals
                         document.getElementById('validation-section').classList.remove('opacity-75');
                         document.getElementById('score-card').classList.replace('bg-gray-50', 'bg-blue-50');
                         document.getElementById('score-card').classList.replace('border-gray-200', 'border-blue-200');
                         document.getElementById('score-badge').classList.replace('bg-gray-500', 'bg-blue-600');
                         document.getElementById('score-badge').innerText = "SUDAH DINILAI";
 
-                        // Update Teacher Signature Placeholder
                         const sigBox = document.getElementById('teacher-sig-box');
                         sigBox.innerHTML = '<span class="text-green-600 font-bold font-mono border-2 border-green-600 p-1 rounded -rotate-6">APPROVED</span>';
                         sigBox.classList.remove('bg-gray-50', 'text-gray-300');
                         sigBox.classList.add('bg-white');
 
-                        // Update Status Bar
                         document.getElementById('status-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
                         document.getElementById('status-icon').classList.remove('animate-spin');
                         document.getElementById('status-title').innerText = "Selesai Dinilai!";
@@ -526,27 +515,23 @@
                         document.getElementById('student-status-bar').classList.replace('border-yellow-500', 'border-green-500');
                         document.getElementById('student-status-bar').classList.replace('bg-yellow-100', 'bg-green-50');
 
-                        // Show Print Button
                         document.getElementById('btn-print-report').classList.remove('hidden');
                     }
                 }
             });
         }
 
-        // --- 2. DASHBOARD & GRADING FUNCTIONS (TEACHER) ---
-        let loadedSubmissions = []; // Store fetched data
+        let loadedSubmissions = [];
 
         window.openDashboard = async function() {
             document.getElementById('dashboard-modal').classList.remove('hidden');
             document.getElementById('status-db').innerText = "Mengambil data terbaru...";
-            
             const tbody = document.getElementById('dashboard-body');
             tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center"><div class="animate-pulse">Loading data...</div></td></tr>';
 
             if (!currentUser) return;
 
             try {
-                // Listen to ALL submissions for real-time dashboard updates
                 onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), (snapshot) => {
                     loadedSubmissions = [];
                     snapshot.forEach((doc) => {
@@ -555,7 +540,6 @@
                         loadedSubmissions.push(d);
                     });
 
-                    // Sort by Class then Name
                     loadedSubmissions.sort((a, b) => {
                         if (a.kelas === b.kelas) return a.nama.localeCompare(b.nama);
                         return a.kelas.localeCompare(b.kelas);
@@ -565,12 +549,11 @@
                     renderStudentList(loadedSubmissions);
                     document.getElementById('status-db').innerText = `Total: ${loadedSubmissions.length} Data Siswa`;
                 });
-
             } catch (e) {
                 console.error(e);
                 tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data.</td></tr>`;
             }
-        }
+        };
 
         function renderStudentList(data) {
             const tbody = document.getElementById('dashboard-body');
@@ -583,7 +566,6 @@
 
             data.forEach((sub) => {
                 const statusColor = sub.status === "Sudah Dinilai" ? "text-green-600 bg-green-100" : "text-amber-600 bg-amber-100";
-                
                 const row = `
                     <tr class="hover:bg-slate-50 cursor-pointer border-b border-slate-100" onclick="openGradingPanel('${sub.id}')">
                         <td class="px-4 py-3">
@@ -595,9 +577,7 @@
                             <span class="px-2 py-1 rounded-full text-[10px] font-bold ${statusColor}">${sub.status}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <button class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded text-xs font-bold">
-                                Nilai
-                            </button>
+                            <button class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded text-xs font-bold">Nilai</button>
                         </td>
                     </tr>
                 `;
@@ -605,7 +585,6 @@
             });
         }
 
-        // --- 3. OPEN GRADING PANEL ---
         window.openGradingPanel = function(docId) {
             const sub = loadedSubmissions.find(s => s.id === docId);
             if (!sub) return;
@@ -638,15 +617,12 @@
                         <strong>Materi:</strong> ${sub.pertemuan}
                     </div>
                 </div>
-
                 <div class="mb-6">
                     <h4 class="font-bold text-sm text-slate-700 mb-2">📖 Jawaban Refleksi Siswa</h4>
                     ${answersHtml}
                 </div>
-
                 <div class="bg-yellow-50 p-4 rounded border border-yellow-200">
                     <h4 class="font-bold text-sm text-yellow-800 mb-3">🏅 Input Penilaian</h4>
-                    
                     <div class="space-y-3">
                         <div>
                             <label class="block text-xs font-bold text-slate-600 mb-1">Nilai (0-100)</label>
@@ -665,14 +641,11 @@
                             <label class="block text-xs font-bold text-slate-600 mb-1">Catatan Guru</label>
                             <textarea id="grade-note" class="w-full border border-slate-300 rounded p-2 text-xs h-20 resize-none" placeholder="Berikan umpan balik...">${sub.catatan !== '-' ? sub.catatan : ''}</textarea>
                         </div>
-                        
-                        <button onclick="submitGrade('${docId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow text-sm mt-2">
-                            SIMPAN NILAI
-                        </button>
+                        <button onclick="submitGrade('${docId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow text-sm mt-2">SIMPAN NILAI</button>
                     </div>
                 </div>
             `;
-        }
+        };
 
         window.submitGrade = async function(docId) {
             const nilai = document.getElementById('grade-val').value;
@@ -692,22 +665,21 @@
                     catatan: catatan,
                     status: "Sudah Dinilai"
                 });
-
                 alert("✅ Nilai berhasil disimpan!");
             } catch (e) {
                 console.error(e);
                 alert("Gagal menyimpan nilai: " + e.message);
             }
-        }
+        };
 
         window.closeGradingPanel = function() {
             document.getElementById('grading-panel').classList.add('hidden');
             document.getElementById('grading-panel').classList.remove('flex');
-        }
+        };
 
         window.closeDashboard = function() {
             document.getElementById('dashboard-modal').classList.add('hidden');
-        }
+        };
 
         window.exportToCSV = function() {
             if (!window.cachedSubmissions || window.cachedSubmissions.length === 0) {
@@ -733,37 +705,63 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
+        };
     </script>
 
     <script>
-        // === DATABASE SISWA & KONTEN ===
+        // === STANDARD UI SCRIPT ===
         const studentData = {
-            "X TKJ A": [
-                "ALDO BARETO", "DARMA YANTI", "DIRLY REVA RADITYA", "FAIZ FATAH HILLAH", 
-                "FIRMANSYAH ARDIANTO", "GEDE ARYA DEVA NANDA", "I GEDE JAYA SATRIA", 
-                "IDA AYU PUTU GITA NIRAWATI", "KOMANG RENDI KAJENG PRATAMA", "LUTVIA ANAS TASYA", 
-                "MADE AYU BUDIATI", "MUHAMAD LABIB MIRZA", "NABILA NUR HAFIFAH", 
-                "NI KETUT DESTA LESTARI", "RAFLY MEY WILIAN", "RIFAI ARYA MAULANA", 
-                "SEVA WISNU RAMADHAN", "SHEILLA NIKI DESTIANI", "TYAN FAJAR PRASETYO", "ZIVARA APRILIA"
-            ],
-            "X TKJ B": [
-                "ANISA", "CLARA SALSABILA", "FEBRIAN RIZKI VALENTINO", "GUSTI AYU KOMANG VYA KARTINI", 
-                "I KOMANG ARNAWAN WIGUNA", "I MADE GILANG PURNAJAYA", "I WAYAN TEGAR WALOYO", 
-                "IDA AYU SINDI SINTYAWATI", "KOMANG RAFA DINATA", "KOMANG REDITE", "MADE EDI PURWATE", 
-                "NI KADEK ARTIKA CHANDRA DEWI", "NI LUH MERY ARYAWATI", "NYOMAN TRI APSARI WIDIA", 
-                "PANDE KETUT BAGAS KARA", "PUTU FITRI YANI", "REHAN OGI DWI PRANATA", 
-                "RIZELENEY APRILIA", "SYIFA ADELIA CAHYANI", "WAYAN SUDIARTE"
-            ],
-            "X TBSM": [
-                "ABBEL DANU VIAN", "AHMAD FAHRI MUSTOFA", "ALDI MIFTAKHUL JINAN", "ALDO VIRMANSYAH", 
-                "ARYA AL FAIS", "DENIS LUTVI AZIZ", "DEWA GEDE WISNU SATRIAWAN", "EDO JAYA PRATAMA", 
-                "EXSAN BAYU NUGEROHO", "FADLI ILHAM ABDILLAH", "FILLPUS AL FINO", 
-                "I DEWA GEDE ADITYA SAPUTRA", "MUHAMAD ALDO SAPUTRA", "MUHAMMAD FAJRI KATAMI", 
-                "MUSTOFA", "NANDA WIJAYA", "RADIT PRASTYO", "RAYHAN PRATAMA", "REFAN ALDIANO", 
-                "RENDY SETIAWAN", "RENO AVIAN", "REZA PRASTOMI", "RISJAYA PRATAMA", 
-                "YUSUF APRIL ERLANGGA", "WAYAN ANDIKA"
-            ]
+            "X TKJ A": ["ALDO BARETO", "DARMA YANTI", "DIRLY REVA RADITYA", "FAIZ FATAH HILLAH", "FIRMANSYAH ARDIANTO", "GEDE ARYA DEVA NANDA", "I GEDE JAYA SATRIA", "IDA AYU PUTU GITA NIRAWATI", "KOMANG RENDI KAJENG PRATAMA", "LUTVIA ANAS TASYA", "MADE AYU BUDIATI", "MUHAMAD LABIB MIRZA", "NABILA NUR HAFIFAH", "NI KETUT DESTA LESTARI", "RAFLY MEY WILIAN", "RIFAI ARYA MAULANA", "SEVA WISNU RAMADHAN", "SHEILLA NIKI DESTIANI", "TYAN FAJAR PRASETYO", "ZIVARA APRILIA"],
+            "X TKJ B": ["ANISA", "CLARA SALSABILA", "FEBRIAN RIZKI VALENTINO", "GUSTI AYU KOMANG VYA KARTINI", "I KOMANG ARNAWAN WIGUNA", "I MADE GILANG PURNAJAYA", "I WAYAN TEGAR WALOYO", "IDA AYU SINDI SINTYAWATI", "KOMANG RAFA DINATA", "KOMANG REDITE", "MADE EDI PURWATE", "NI KADEK ARTIKA CHANDRA DEWI", "NI LUH MERY ARYAWATI", "NYOMAN TRI APSARI WIDIA", "PANDE KETUT BAGAS KARA", "PUTU FITRI YANI", "REHAN OGI DWI PRANATA", "RIZELENEY APRILIA", "SYIFA ADELIA CAHYANI", "WAYAN SUDIARTE"],
+            "X TBSM": ["ABBEL DANU VIAN", "AHMAD FAHRI MUSTOFA", "ALDI MIFTAKHUL JINAN", "ALDO VIRMANSYAH", "ARYA AL FAIS", "DENIS LUTVI AZIZ", "DEWA GEDE WISNU SATRIAWAN", "EDO JAYA PRATAMA", "EXSAN BAYU NUGEROHO", "FADLI ILHAM ABDILLAH", "FILLPUS AL FINO", "I DEWA GEDE ADITYA SAPUTRA", "MUHAMAD ALDO SAPUTRA", "MUHAMMAD FAJRI KATAMI", "MUSTOFA", "NANDA WIJAYA", "RADIT PRASTYO", "RAYHAN PRATAMA", "REFAN ALDIANO", "RENDY SETIAWAN", "RENO AVIAN", "REZA PRASTOMI", "RISJAYA PRATAMA", "YUSUF APRIL ERLANGGA", "WAYAN ANDIKA"]
+        };
+
+        const rppData = {
+            1: {
+                title: "Pertemuan 1: Lari Jarak Pendek (Sprint)",
+                materi: `<div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Organisasi</strong><p class="mb-2">Atletik disebut sebagai <em>"Mother of Sports"</em> (Induk Cabang Olahraga) karena menjadi fondasi gerakan dasar seperti lari, lompat, dan lempar. Induk organisasi internasionalnya adalah <strong>World Athletics</strong>, sedangkan di Indonesia adalah <strong>PASI</strong> (Persatuan Atletik Seluruh Indonesia).</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Teknik Start Jongkok (Crouch Start)</strong><p class="mb-2">Teknik start yang efektif menggunakan tumpuan yang kuat untuk menghasilkan dorongan maksimal.</p><ul class="list-disc ml-4 space-y-1 mt-1"><li><strong>"Bersedia":</strong> Posisi jongkok, tangan membentuk huruf V terbalik di belakang garis start. Lutut kaki belakang menyentuh permukaan lintasan.</li><li><strong>"Siap":</strong> Angkat <strong>panggul</strong> sedikit lebih tinggi dari bahu. Pindahkan pusat berat badan ke depan (bertumpu pada lengan) untuk persiapan tolakan.</li><li><strong>"Ya":</strong> Lakukan <strong>tolakan eksplosif</strong> kaki belakang pada tumpuan agar tubuh meluncur cepat ke depan dengan sudut kemiringan yang tepat.</li></ul></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Biomekanika Lari Sprint</strong><p>Saat melakukan sprint, tubuh condong ke depan (body lean). Tumpuan kaki menggunakan <strong>ujung telapak kaki (forefoot)</strong> untuk meminimalkan waktu kontak dengan tanah dan memaksimalkan dorongan. Ayunan lengan siku ditekuk 90 derajat secara kuat.</p></div>`,
+                aktivitas: [
+                    { title: "Praktik Posisi Tangan", desc: "Melatih posisi tangan V-terbalik di garis start. Memastikan jari-jari kokoh menopang beban tubuh untuk stabilitas." },
+                    { title: "Latihan Reaksi (Reaction Drill)", desc: "Berdiri membelakangi instruktur. Saat mendengar sinyal suara, segera berbalik dan melakukan akselerasi 5-10 meter." },
+                    { title: "Sprint 30 Meter", desc: "Melakukan lari 30 meter. Fokus pada transisi posisi tubuh dari condong (fase akselerasi) ke posisi lari tegak." },
+                    { title: "Teknik Memasuki Garis Finish", desc: "Berlari melewati garis finish dengan membusungkan dada (The Dip) tanpa mengurangi kecepatan secara tiba-tiba." }
+                ],
+                soal: [
+                    "Apa yang paling sulit kamu rasakan saat melakukan start jongkok tadi? Apakah kakimu terasa licin atau kuat menolak?",
+                    "Saat lari kencang tadi, apakah kamu lari jinjit (ujung kaki) atau telapak rata? Mana yang menurutmu membuat larimu lebih cepat?",
+                    "Saat aba-aba 'Siap' (panggul naik), apakah tanganmu terasa gemetar menahan berat badan? Ceritakan apa yang kamu rasakan di lenganmu!"
+                ]
+            },
+            2: {
+                title: "Pertemuan 2: Lari Jarak Menengah (800m - 1500m)",
+                materi: `<div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Karakteristik Lari Menengah</strong><p class="mb-2">Nomor lari 800m dan 1500m memiliki sejarah panjang sejak Olimpiade Kuno. Nomor ini unik karena menuntut perpaduan dua aspek fisik utama: <strong>Kecepatan</strong> (seperti sprinter) dan <strong>Daya Tahan</strong> (seperti pelari maraton). Pelari harus cerdas menghemat tenaga (efisiensi) di awal, namun memiliki sisa tenaga untuk sprint di akhir.</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Analisis Teknik & Posisi Tubuh</strong><p class="mb-2">Berbeda dengan sprinter yang membungkuk, pelari jarak menengah menggunakan <strong>Start Berdiri (Standing Start)</strong> dengan posisi tubuh lebih tegak (sekitar 80-85 derajat). Posisi tegak ini penting untuk membuka rongga dada agar asupan oksigen ke paru-paru lebih maksimal selama berlari.</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Strategi Lomba (Taktik)</strong><ul class="list-disc ml-4 space-y-1"><li><strong>Pacing (Pengaturan Irama):</strong> Menjaga kecepatan tetap stabil (konstan) di setiap putaran agar tidak kelelahan dini.</li><li><strong>Positioning:</strong> Menjaga posisi agar tidak terkurung lawan, terutama saat memasuki tikungan.</li><li><strong>Kick:</strong> Kemampuan melakukan akselerasi maksimal di 100-200 meter terakhir menjelang finish.</li></ul></div>`,
+                aktivitas: [
+                    { title: "Simulasi Start Berdiri", desc: "Mempraktikkan posisi kaki (satu depan, satu belakang) dengan lutut sedikit ditekuk dan badan condong." },
+                    { title: "Teknik Pendaratan (Midfoot)", desc: "Jogging ritmis dengan fokus pendaratan kaki rata. Membandingkan efisiensinya dengan teknik jinjit." },
+                    { title: "Latihan Pacing", desc: "Berlari dengan target waktu putaran yang konsisten (misal: 2 menit per putaran) untuk melatih 'feeling' irama." },
+                    { title: "Manajemen Pernapasan", desc: "Berlari dengan pola napas ritmis 2:2 (2 langkah inhalasi, 2 langkah ekshalasi)." }
+                ],
+                soal: [
+                    "Apa bedanya rasa capek saat lari sprint (Pertemuan 1) dengan lari keliling lapangan hari ini? Mana yang lebih bikin napasmu 'ngos-ngosan'?",
+                    "Apakah perutmu terasa sakit (suduk) atau napasmu sesak saat berlari tadi? Jika iya, apa yang kamu lakukan biar enakan?",
+                    "Coba bayangkan jika kamu lari secepat kilat (sprint) di awal start tadi, kira-kira apa yang akan terjadi pada kakimu di putaran terakhir? Masih kuat atau lemas?"
+                ]
+            },
+            3: {
+                title: "Pertemuan 3: Lari Jarak Jauh (Endurance)",
+                materi: `<div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Filosofi Marathon</strong><p class="mb-2">Lari jarak jauh memiliki akar sejarah dari legenda Marathon (Yunani Kuno). Ini merupakan uji ketahanan fisik dan mental manusia yang ekstrem.</p><div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded mb-2"><p><strong>Fartlek (Speed Play):</strong> Metode latihan variasi kecepatan (lari, jogging, jalan) di medan alami.</p><p><strong>Personal Best (PB):</strong> Catatan waktu terbaik pribadi yang menjadi tolok ukur kemajuan atlet.</p></div></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Konsep Daya Tahan (Endurance)</strong><p>Kunci lari jarak jauh adalah efisiensi energi. Ayunan lengan rendah dan rileks. Frekuensi langkah (cadence) dijaga stabil untuk menghemat konsumsi oksigen.</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Fenomena Kelelahan</strong><p>Pelari jarak jauh sering menghadapi fase <em>"Hitting the Wall"</em>, yaitu kondisi kehabisan cadangan glikogen otot secara drastis. Diperlukan strategi mental dan hidrasi yang tepat untuk mengatasinya.</p></div>`,
+                aktivitas: [
+                    { title: "Latihan Fartlek", desc: "Berlari durasi 15 menit dengan variasi intensitas: Sprint, Jogging, dan Jalan secara bergantian." },
+                    { title: "Uji Daya Tahan (Tes Cooper)", desc: "Berlari sejauh mungkin dalam waktu 12 menit untuk mengukur kapasitas aerobik (VO2 Max)." },
+                    { title: "Pemulihan Denyut Nadi", desc: "Mengukur denyut nadi pemulihan (recovery heart rate) untuk menilai tingkat kebugaran jantung." },
+                    { title: "Pendinginan (Cooling Down)", desc: "Melakukan peregangan statis pada otot tungkai untuk mencegah kram otot." }
+                ],
+                soal: [
+                    "Bagian tubuh mana yang paling pegal saat lari jarak jauh tadi? Kaki, napas, atau pundak? Ceritakan rasanya!",
+                    "Apa yang kamu pikirkan saat merasa sangat capek tapi harus tetap lari? Kalimat apa yang kamu ucapkan dalam hati biar semangat lagi?",
+                    "Mana yang lebih asik menurutmu: Lari terus-menerus dengan kecepatan sama, atau lari Fartlek (lari-jalan-lari) yang berubah-ubah? Kenapa?"
+                ]
+            }
         };
 
         const sikapList = [
@@ -774,7 +772,7 @@
             { title: "Kreatif", desc: "Mencari solusi sederhana saat latihan (misal: mengatur napas sendiri agar tidak cepat capek)." }
         ];
 
-        // Load Siswa & Generate UI
+        // Functions
         function loadStudents() {
             const classSelect = document.getElementById('class-select');
             const studentSelect = document.getElementById('student-select');
@@ -797,162 +795,6 @@
             if (studentSelect.value) absenInput.value = studentSelect.value;
             else absenInput.value = "";
         }
-
-        // Generate Checklist Sikap
-        const checklistBody = document.getElementById('checklist-sikap-body');
-        if (checklistBody) {
-            checklistBody.innerHTML = '';
-            sikapList.forEach((item, idx) => {
-                const bgClass = idx % 2 === 0 ? '' : 'bg-slate-50';
-                checklistBody.innerHTML += `
-                    <tr class="${bgClass}">
-                        <td class="p-2 border border-slate-300 text-center font-bold">${idx + 1}</td>
-                        <td class="p-2 border border-slate-300">
-                            <strong>${item.title}:</strong> ${item.desc}
-                        </td>
-                        <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                        <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                    </tr>
-                `;
-            });
-        }
-
-        // === LOGIKA AKSES GURU ===
-        const TEACHER_PIN = "270302";
-
-        function openLoginModal() {
-            document.getElementById('login-modal').classList.remove('hidden');
-            document.getElementById('pin-input').value = "";
-            setTimeout(() => document.getElementById('pin-input').focus(), 100);
-        }
-
-        function closeLoginModal() {
-            document.getElementById('login-modal').classList.add('hidden');
-        }
-
-        function checkPin() {
-            const input = document.getElementById('pin-input').value;
-            if (input === TEACHER_PIN) {
-                const panel = document.getElementById('teacher-panel');
-                const btn = document.getElementById('btn-login');
-                closeLoginModal();
-                panel.classList.remove('hidden');
-                btn.classList.add('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                alert("PIN Salah! Coba lagi.");
-                document.getElementById('pin-input').value = "";
-            }
-        }
-
-        function logout() {
-            document.getElementById('teacher-panel').classList.add('hidden');
-            document.getElementById('btn-login').classList.remove('hidden');
-            document.getElementById('meetingSelector').value = "1";
-            loadMeetingData();
-        }
-
-        document.getElementById('pin-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') checkPin();
-        });
-
-        // === DATA RPP / MODUL AJAR ===
-        const rppData = {
-            1: {
-                title: "Pertemuan 1: Lari Jarak Pendek (Sprint)",
-                materi: `
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Organisasi</strong>
-                        <p class="mb-2">Atletik disebut sebagai <em>"Mother of Sports"</em> (Induk Cabang Olahraga) karena menjadi fondasi gerakan dasar seperti lari, lompat, dan lempar. Induk organisasi internasionalnya adalah <strong>World Athletics</strong>, sedangkan di Indonesia adalah <strong>PASI</strong> (Persatuan Atletik Seluruh Indonesia).</p>
-                    </div>
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Teknik Start Jongkok (Crouch Start)</strong>
-                        <p class="mb-2">Teknik start yang efektif menggunakan tumpuan yang kuat untuk menghasilkan dorongan maksimal.</p>
-                        <ul class="list-disc ml-4 space-y-1 mt-1">
-                            <li><strong>"Bersedia":</strong> Posisi jongkok, tangan membentuk huruf V terbalik di belakang garis start. Lutut kaki belakang menyentuh permukaan lintasan.</li>
-                            <li><strong>"Siap":</strong> Angkat <strong>panggul</strong> sedikit lebih tinggi dari bahu. Pindahkan pusat berat badan ke depan (bertumpu pada lengan) untuk persiapan tolakan.</li>
-                            <li><strong>"Ya":</strong> Lakukan <strong>tolakan eksplosif</strong> kaki belakang pada tumpuan agar tubuh meluncur cepat ke depan dengan sudut kemiringan yang tepat.</li>
-                        </ul>
-                    </div>
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Biomekanika Lari Sprint</strong>
-                        <p>Saat melakukan sprint, tubuh condong ke depan (body lean). Tumpuan kaki menggunakan <strong>ujung telapak kaki (forefoot)</strong> untuk meminimalkan waktu kontak dengan tanah dan memaksimalkan dorongan. Ayunan lengan siku ditekuk 90 derajat secara kuat.</p>
-                    </div>`,
-                aktivitas: [
-                    { title: "Praktik Posisi Tangan", desc: "Melatih posisi tangan V-terbalik di garis start. Memastikan jari-jari kokoh menopang beban tubuh untuk stabilitas." },
-                    { title: "Latihan Reaksi (Reaction Drill)", desc: "Berdiri membelakangi instruktur. Saat mendengar sinyal suara, segera berbalik dan melakukan akselerasi 5-10 meter." },
-                    { title: "Sprint 30 Meter", desc: "Melakukan lari 30 meter. Fokus pada transisi posisi tubuh dari condong (fase akselerasi) ke posisi lari tegak." },
-                    { title: "Teknik Memasuki Garis Finish", desc: "Berlari melewati garis finish dengan membusungkan dada (The Dip) tanpa mengurangi kecepatan secara tiba-tiba." }
-                ],
-                soal: [
-                    "Apa yang paling sulit kamu rasakan saat melakukan start jongkok tadi? Apakah kakimu terasa licin atau kuat menolak?",
-                    "Saat lari kencang tadi, apakah kamu lari jinjit (ujung kaki) atau telapak rata? Mana yang menurutmu membuat larimu lebih cepat?",
-                    "Saat aba-aba 'Siap' (panggul naik), apakah tanganmu terasa gemetar menahan berat badan? Ceritakan apa yang kamu rasakan di lenganmu!"
-                ]
-            },
-            2: {
-                title: "Pertemuan 2: Lari Jarak Menengah (800m - 1500m)",
-                materi: `
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Karakteristik Lari Menengah</strong>
-                        <p class="mb-2">Nomor lari 800m dan 1500m memiliki sejarah panjang sejak Olimpiade Kuno. Nomor ini unik karena menuntut perpaduan dua aspek fisik utama: <strong>Kecepatan</strong> (seperti sprinter) dan <strong>Daya Tahan</strong> (seperti pelari maraton). Pelari harus cerdas menghemat tenaga (efisiensi) di awal, namun memiliki sisa tenaga untuk sprint di akhir.</p>
-                    </div>
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Analisis Teknik & Posisi Tubuh</strong>
-                        <p class="mb-2">Berbeda dengan sprinter yang membungkuk, pelari jarak menengah menggunakan <strong>Start Berdiri (Standing Start)</strong> dengan posisi tubuh lebih tegak (sekitar 80-85 derajat). Posisi tegak ini penting untuk membuka rongga dada agar asupan oksigen ke paru-paru lebih maksimal selama berlari.</p>
-                    </div>
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Strategi Lomba (Taktik)</strong>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <li><strong>Pacing (Pengaturan Irama):</strong> Menjaga kecepatan tetap stabil (konstan) di setiap putaran agar tidak kelelahan dini.</li>
-                            <li><strong>Positioning:</strong> Menjaga posisi agar tidak terkurung lawan, terutama saat memasuki tikungan.</li>
-                            <li><strong>Kick:</strong> Kemampuan melakukan akselerasi maksimal di 100-200 meter terakhir menjelang finish.</li>
-                        </ul>
-                    </div>`,
-                aktivitas: [
-                    { title: "Simulasi Start Berdiri", desc: "Mempraktikkan posisi kaki (satu depan, satu belakang) dengan lutut sedikit ditekuk dan badan condong." },
-                    { title: "Teknik Pendaratan (Midfoot)", desc: "Jogging ritmis dengan fokus pendaratan kaki rata. Membandingkan efisiensinya dengan teknik jinjit." },
-                    { title: "Latihan Pacing", desc: "Berlari dengan target waktu putaran yang konsisten (misal: 2 menit per putaran) untuk melatih 'feeling' irama." },
-                    { title: "Manajemen Pernapasan", desc: "Berlari dengan pola napas ritmis 2:2 (2 langkah inhalasi, 2 langkah ekshalasi)." }
-                ],
-                soal: [
-                    "Apa bedanya rasa capek saat lari sprint (Pertemuan 1) dengan lari keliling lapangan hari ini? Mana yang lebih bikin napasmu 'ngos-ngosan'?",
-                    "Apakah perutmu terasa sakit (suduk) atau napasmu sesak saat berlari tadi? Jika iya, apa yang kamu lakukan biar enakan?",
-                    "Coba bayangkan jika kamu lari secepat kilat (sprint) di awal start tadi, kira-kira apa yang akan terjadi pada kakimu di putaran terakhir? Masih kuat atau lemas?"
-                ]
-            },
-            3: {
-                title: "Pertemuan 3: Lari Jarak Jauh (Endurance)",
-                materi: `
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Filosofi Marathon</strong>
-                        <p>Lari jarak jauh memiliki akar sejarah dari legenda Marathon (Yunani Kuno). Ini merupakan uji ketahanan fisik dan mental manusia yang ekstrem.</p>
-                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded mb-2">
-                            <p><strong>Fartlek (Speed Play):</strong> Metode latihan variasi kecepatan (lari, jogging, jalan) di medan alami.</p>
-                            <p><strong>Personal Best (PB):</strong> Catatan waktu terbaik pribadi yang menjadi tolok ukur kemajuan atlet.</p>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Konsep Daya Tahan (Endurance)</strong>
-                        <p>Kunci lari jarak jauh adalah efisiensi energi. Ayunan lengan rendah dan rileks. Frekuensi langkah (cadence) dijaga stabil untuk menghemat konsumsi oksigen.</p>
-                    </div>
-                    <div class="mb-4">
-                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Fenomena Kelelahan</strong>
-                        <p>Pelari jarak jauh sering menghadapi fase <em>"Hitting the Wall"</em>, yaitu kondisi kehabisan cadangan glikogen otot secara drastis. Diperlukan strategi mental dan hidrasi yang tepat untuk mengatasinya.</p>
-                    </div>`,
-                aktivitas: [
-                    { title: "Latihan Fartlek", desc: "Berlari durasi 15 menit dengan variasi intensitas: Sprint, Jogging, dan Jalan secara bergantian." },
-                    { title: "Uji Daya Tahan (Tes Cooper)", desc: "Berlari sejauh mungkin dalam waktu 12 menit untuk mengukur kapasitas aerobik (VO2 Max)." },
-                    { title: "Pemulihan Denyut Nadi", desc: "Mengukur denyut nadi pemulihan (recovery heart rate) untuk menilai tingkat kebugaran jantung." },
-                    { title: "Pendinginan (Cooling Down)", desc: "Melakukan peregangan statis pada otot tungkai untuk mencegah kram otot." }
-                ],
-                soal: [
-                    "Bagian tubuh mana yang paling pegal saat lari jarak jauh tadi? Kaki, napas, atau pundak? Ceritakan rasanya!",
-                    "Apa yang kamu pikirkan saat merasa sangat capek tapi harus tetap lari? Kalimat apa yang kamu ucapkan dalam hati biar semangat lagi?",
-                    "Mana yang lebih asik menurutmu: Lari terus-menerus dengan kecepatan sama, atau lari Fartlek (lari-jalan-lari) yang berubah-ubah? Kenapa?"
-                ]
-            }
-        };
 
         function loadMeetingData() {
             const id = document.getElementById('meetingSelector').value;
@@ -986,8 +828,44 @@
             });
         }
 
-        // Tanda Tangan Logic
-        document.getElementById('student-date').valueAsDate = new Date();
+        // Logic Akses Guru
+        const TEACHER_PIN = "270302";
+
+        function openLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            const pinInput = document.getElementById('pin-input');
+            pinInput.value = "";
+            pinInput.disabled = false;
+            setTimeout(() => pinInput.focus(), 100);
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        function checkPin() {
+            const input = document.getElementById('pin-input').value;
+            if (input === TEACHER_PIN) {
+                const panel = document.getElementById('teacher-panel');
+                const btn = document.getElementById('btn-login');
+                closeLoginModal();
+                panel.classList.remove('hidden');
+                btn.classList.add('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert("PIN Salah! Coba lagi.");
+                document.getElementById('pin-input').value = "";
+            }
+        }
+
+        function logout() {
+            document.getElementById('teacher-panel').classList.add('hidden');
+            document.getElementById('btn-login').classList.remove('hidden');
+            document.getElementById('meetingSelector').value = "1";
+            loadMeetingData();
+        }
+
+        // Canvas / Signature Logic
         function setupSig(id) {
             const canvas = document.getElementById(id);
             if(!canvas) return;
@@ -1020,10 +898,30 @@
             ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.restore(); ctx.beginPath();
         }
 
+        // Init
         window.addEventListener('load', () => {
             loadMeetingData();
             setupSig('sig-siswa');
             setupSig('sig-guru');
+            
+            // Populate Checklist
+            const checklistBody = document.getElementById('checklist-sikap-body');
+            if (checklistBody) {
+                checklistBody.innerHTML = '';
+                sikapList.forEach((item, idx) => {
+                    const bgClass = idx % 2 === 0 ? '' : 'bg-slate-50';
+                    checklistBody.innerHTML += `
+                        <tr class="${bgClass}">
+                            <td class="p-2 border border-slate-300 text-center font-bold">${idx + 1}</td>
+                            <td class="p-2 border border-slate-300">
+                                <strong>${item.title}:</strong> ${item.desc}
+                            </td>
+                            <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                            <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                        </tr>
+                    `;
+                });
+            }
         });
     </script>
 </body>
