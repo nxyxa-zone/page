@@ -52,6 +52,7 @@
                 appearance: none;
             }
             ::placeholder { color: transparent; }
+            /* Hide empty elements in print */
             #student-catatan:empty { display: none; }
             .page-break { page-break-before: always; }
             .avoid-break { page-break-inside: avoid; }
@@ -262,7 +263,7 @@
                     <button id="btn-submit-lkpd" onclick="saveStudentData()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> UNGGAH KE GOOGLE DRIVE
                     </button>
-                    <p class="text-center text-xs text-slate-400" id="submit-hint">Upload hasil PDF ke Folder Google Drive Guru.</p>
+                    <p class="text-center text-xs text-slate-400" id="submit-hint">Upload hasil PDF ke Folder Google Drive sesuai kelas.</p>
                 </div>
             </div>
         </div>
@@ -534,12 +535,22 @@
                 return;
             }
 
-            // 2. Tampilkan Alert & Buka Google Drive
-            // LINK BARU YANG DIMINTA
-            const googleDriveLink = "https://drive.google.com/drive/folders/1Z_RAMPabsO83v5Zh4WTDDF9MtH7iRgwG?usp=sharing"; 
+            // 2. Tampilkan Alert & Buka Google Drive SESUAI KELAS
+            const driveLinks = {
+                "X TKJ A": "https://drive.google.com/drive/folders/1b2Mg_YHYij2O37oALZjg852woYsCpyFP?usp=drive_link",
+                "X TKJ B": "https://drive.google.com/drive/folders/1p6J-WpOSDDFhtOH1H4OiDNCzNbZA2TkP?usp=drive_link",
+                "X TBSM": "https://drive.google.com/drive/folders/1CCl5Jc7RJW8GdgEERaoOnIA-X7-AyXwd?usp=drive_link"
+            };
             
-            // Buka di tab baru
-            window.open(googleDriveLink, '_blank');
+            const targetLink = driveLinks[kelas];
+            
+            if (targetLink) {
+                 // Buka di tab baru
+                 window.open(targetLink, '_blank');
+            } else {
+                alert("Link Drive untuk kelas ini belum diatur. Silakan lapor ke Guru.");
+                return;
+            }
             
             // 3. (Opsional) Tetap simpan log ke database agar Guru tahu siapa yang "klik" kumpul
             // Jika tidak ingin disimpan, hapus blok 'if (currentUser) { ... }' ini.
