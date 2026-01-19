@@ -382,74 +382,41 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, Timestamp, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ============================================
-        // [PENTING!] GANTI CONFIG DI BAWAH JIKA DI HOSTING DI GITHUB PAGES
-        // ============================================
-        let firebaseConfig;
-        
-        // Cek apakah kode dijalankan di lingkungan editor ini
-        try {
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
+        const apiKey = ""; 
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
             }
-        } catch(e) {
-            // JIKA DI GITHUB PAGES, HAPUS KOMENTAR & ISI DATA INI:
-            
-            /*
-            firebaseConfig = {
-                apiKey: "API_KEY_ANDA",
-                authDomain: "PROJECT_ID.firebaseapp.com",
-                projectId: "PROJECT_ID",
-                storageBucket: "PROJECT_ID.firebasestorage.app",
-                messagingSenderId: "SENDER_ID",
-                appId: "APP_ID"
-            };
-            */
-           
-           // Jika config belum diisi, tampilkan alert
-           if(!firebaseConfig) {
-               console.warn("Firebase Config belum diatur! Fitur simpan data tidak akan bekerja di luar editor ini.");
-           }
-        }
-        // ============================================
+        };
+        initAuth();
 
-        // Initialize Firebase Only if Config Exists
-        let app, auth, db, currentUser;
-        
-        if (firebaseConfig) {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            // Auth Logic
-            const initAuth = async () => {
-                try {
-                    // Cek token bawaan sistem editor
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    console.error("Authentication failed:", error);
-                }
-            };
-            initAuth();
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    console.log("Terhubung ke Database ✅");
-                }
-            });
-        }
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                console.log("User authenticated");
+            }
+        });
 
         // --- GLOBAL FUNCTIONS ATTACHED TO WINDOW ---
         
         // 1. SIMPAN DATA SISWA
         window.saveStudentData = async function() {
             if (!currentUser) {
-                alert("Database belum terhubung. \nJika Anda menjalankannya di GitHub Pages, pastikan sudah mengisi firebaseConfig di dalam script.");
+                alert("Sedang menghubungkan ke database... Tunggu sebentar.");
                 return;
             }
 
@@ -475,16 +442,6 @@
                 sikapSummary.push(checkedYa ? "Ya" : "Tidak");
             });
 
-            // Mendapatkan ID Aplikasi (Gunakan 'default' jika di luar editor)
-            const activeAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            
-            // Path Koleksi (Flexible)
-            // Di Editor: artifacts/{id}/public/data/...
-            // Di Luar: lkpd_submissions
-            const collectionPath = typeof __app_id !== 'undefined' 
-                ? `artifacts/${activeAppId}/public/data/lkpd_submissions`
-                : 'lkpd_submissions';
-
             const submissionData = {
                 kelas: kelas,
                 nama: nama,
@@ -505,7 +462,8 @@
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = 'Mengirim...';
 
-                const docRef = await addDoc(collection(db, collectionPath), submissionData);
+                // Gunakan path wajib: /artifacts/{appId}/public/data/{collectionName}
+                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), submissionData);
                 
                 const statusBar = document.getElementById('student-status-bar');
                 statusBar.classList.remove('hidden');
@@ -513,10 +471,11 @@
                 btnSubmit.style.display = 'none';
                 document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
                 
+                // Kunci Input LKPD
                 document.querySelectorAll('.main-card input, .main-card textarea, .main-card select').forEach(el => el.disabled = true);
                 document.getElementById('btn-clear-sig').style.display = 'none';
 
-                watchSubmission(docRef.id, collectionPath);
+                watchSubmission(docRef.id);
 
             } catch (e) {
                 alert("Gagal mengirim data: " + e.message);
@@ -526,8 +485,8 @@
         };
 
         // 2. LISTEN PERUBAHAN STATUS (REAL-TIME)
-        function watchSubmission(docId, path) {
-            onSnapshot(doc(db, path, docId), (doc) => {
+        function watchSubmission(docId) {
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
                     if (data.status === "Sudah Dinilai") {
@@ -573,13 +532,8 @@
 
             if (!currentUser) return;
 
-            const activeAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const collectionPath = typeof __app_id !== 'undefined' 
-                ? `artifacts/${activeAppId}/public/data/lkpd_submissions`
-                : 'lkpd_submissions';
-
             try {
-                onSnapshot(collection(db, collectionPath), (snapshot) => {
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), (snapshot) => {
                     loadedSubmissions = [];
                     snapshot.forEach((doc) => {
                         const d = doc.data();
@@ -598,7 +552,7 @@
                 });
             } catch (e) {
                 console.error(e);
-                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data. Periksa Config Firebase.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data.</td></tr>`;
             }
         };
 
@@ -704,13 +658,8 @@
                 return;
             }
 
-            const activeAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const collectionPath = typeof __app_id !== 'undefined' 
-                ? `artifacts/${activeAppId}/public/data/lkpd_submissions`
-                : 'lkpd_submissions';
-
             try {
-                const docRef = doc(db, collectionPath, docId);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId);
                 await updateDoc(docRef, {
                     nilai: nilai,
                     predikat: predikat,
