@@ -382,38 +382,62 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, Timestamp, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const apiKey = ""; 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Logic otomatis deteksi lingkungan
+        let app, auth, db, currentUser;
+        let collectionPath = 'lkpd_submissions'; // Default path untuk GitHub Pages
 
-        let currentUser = null;
-
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Authentication failed:", error);
-            }
-        };
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                console.log("User authenticated");
-            }
-        });
-
-        // --- GLOBAL FUNCTIONS ATTACHED TO WINDOW ---
+        let firebaseConfig;
         
-        // 1. SIMPAN DATA SISWA
+        try {
+            // Cek apakah di Canvas (ada __firebase_config)
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+                const currentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                collectionPath = `artifacts/${currentAppId}/public/data/lkpd_submissions`; // Path Wajib Canvas
+            } else {
+                // Konfigurasi Pribadi Anda (untuk GitHub Pages / Luar)
+                firebaseConfig = {
+                    apiKey: "AIzaSyC-FFct17BVAdsqii9DOuAQLZnGF25fzOA",
+                    authDomain: "lkpd-pjok-smk.firebaseapp.com",
+                    projectId: "lkpd-pjok-smk",
+                    storageBucket: "lkpd-pjok-smk.firebasestorage.app",
+                    messagingSenderId: "1006297448814",
+                    appId: "1:1006297448814:web:987593ba4365f4b5a7c17f"
+                };
+            }
+        } catch(e) {
+            console.error("Config Error", e);
+        }
+
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // Auth Logic
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                }
+            };
+            initAuth();
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    console.log("Terhubung ke Database ✅");
+                }
+            });
+        }
+
+        // --- GLOBAL FUNCTIONS ---
+        
         window.saveStudentData = async function() {
             if (!currentUser) {
                 alert("Sedang menghubungkan ke database... Tunggu sebentar.");
@@ -462,8 +486,8 @@
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = 'Mengirim...';
 
-                // Gunakan path wajib: /artifacts/{appId}/public/data/{collectionName}
-                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), submissionData);
+                // Gunakan path dinamis (collectionPath)
+                const docRef = await addDoc(collection(db, collectionPath), submissionData);
                 
                 const statusBar = document.getElementById('student-status-bar');
                 statusBar.classList.remove('hidden');
@@ -471,7 +495,6 @@
                 btnSubmit.style.display = 'none';
                 document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
                 
-                // Kunci Input LKPD
                 document.querySelectorAll('.main-card input, .main-card textarea, .main-card select').forEach(el => el.disabled = true);
                 document.getElementById('btn-clear-sig').style.display = 'none';
 
@@ -484,9 +507,8 @@
             }
         };
 
-        // 2. LISTEN PERUBAHAN STATUS (REAL-TIME)
         function watchSubmission(docId) {
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId), (doc) => {
+            onSnapshot(doc(db, collectionPath, docId), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
                     if (data.status === "Sudah Dinilai") {
@@ -521,7 +543,6 @@
             });
         }
 
-        // 3. DASHBOARD GURU
         let loadedSubmissions = [];
 
         window.openDashboard = async function() {
@@ -533,7 +554,7 @@
             if (!currentUser) return;
 
             try {
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), (snapshot) => {
+                onSnapshot(collection(db, collectionPath), (snapshot) => {
                     loadedSubmissions = [];
                     snapshot.forEach((doc) => {
                         const d = doc.data();
@@ -659,7 +680,7 @@
             }
 
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId);
+                const docRef = doc(db, collectionPath, docId);
                 await updateDoc(docRef, {
                     nilai: nilai,
                     predikat: predikat,
