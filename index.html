@@ -85,7 +85,7 @@
             </div>
             <button id="btn-print-report" onclick="window.print()" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-all flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H5a2 2 0 012 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
                 CETAK LAPORAN (PDF)
             </button>
@@ -382,40 +382,74 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, Timestamp, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Setup Firebase
-        const apiKey = ""; 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // ============================================
+        // [PENTING!] GANTI CONFIG DI BAWAH JIKA DI HOSTING DI GITHUB PAGES
+        // ============================================
+        let firebaseConfig;
+        
+        // Cek apakah kode dijalankan di lingkungan editor ini
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch(e) {
+            // JIKA DI GITHUB PAGES, HAPUS KOMENTAR & ISI DATA INI:
+            
+            /*
+            firebaseConfig = {
+                apiKey: "API_KEY_ANDA",
+                authDomain: "PROJECT_ID.firebaseapp.com",
+                projectId: "PROJECT_ID",
+                storageBucket: "PROJECT_ID.firebasestorage.app",
+                messagingSenderId: "SENDER_ID",
+                appId: "APP_ID"
+            };
+            */
+           
+           // Jika config belum diisi, tampilkan alert
+           if(!firebaseConfig) {
+               console.warn("Firebase Config belum diatur! Fitur simpan data tidak akan bekerja di luar editor ini.");
+           }
+        }
+        // ============================================
 
-        let currentUser = null;
+        // Initialize Firebase Only if Config Exists
+        let app, auth, db, currentUser;
+        
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+            // Auth Logic
+            const initAuth = async () => {
+                try {
+                    // Cek token bawaan sistem editor
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
                 }
-            } catch (error) {
-                console.error("Authentication failed:", error);
-            }
-        };
-        initAuth();
+            };
+            initAuth();
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                console.log("User authenticated");
-            }
-        });
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    console.log("Terhubung ke Database ✅");
+                }
+            });
+        }
 
-        // Attach global functions
+        // --- GLOBAL FUNCTIONS ATTACHED TO WINDOW ---
+        
+        // 1. SIMPAN DATA SISWA
         window.saveStudentData = async function() {
             if (!currentUser) {
-                alert("Sedang menghubungkan ke database... coba lagi.");
+                alert("Database belum terhubung. \nJika Anda menjalankannya di GitHub Pages, pastikan sudah mengisi firebaseConfig di dalam script.");
                 return;
             }
 
@@ -430,19 +464,26 @@
                 return;
             }
 
-            // Collect Answers
             const jawabanRefleksi = [];
-            document.querySelectorAll('#content-soal textarea').forEach((ta, idx) => {
+            document.querySelectorAll('#content-soal textarea').forEach((ta) => {
                 jawabanRefleksi.push(ta.value || "-");
             });
 
-            // Collect Checklist
             const sikapSummary = [];
-            document.querySelectorAll('#checklist-sikap-body tr').forEach((tr, idx) => {
+            document.querySelectorAll('#checklist-sikap-body tr').forEach((tr) => {
                 const checkedYa = tr.querySelector('input[type="checkbox"]:first-child').checked;
-                const checkedTidak = tr.querySelector('input[type="checkbox"]:last-child').checked;
-                sikapSummary.push(checkedYa ? "Ya" : (checkedTidak ? "Tidak" : "-"));
+                sikapSummary.push(checkedYa ? "Ya" : "Tidak");
             });
+
+            // Mendapatkan ID Aplikasi (Gunakan 'default' jika di luar editor)
+            const activeAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            
+            // Path Koleksi (Flexible)
+            // Di Editor: artifacts/{id}/public/data/...
+            // Di Luar: lkpd_submissions
+            const collectionPath = typeof __app_id !== 'undefined' 
+                ? `artifacts/${activeAppId}/public/data/lkpd_submissions`
+                : 'lkpd_submissions';
 
             const submissionData = {
                 kelas: kelas,
@@ -464,7 +505,7 @@
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = 'Mengirim...';
 
-                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), submissionData);
+                const docRef = await addDoc(collection(db, collectionPath), submissionData);
                 
                 const statusBar = document.getElementById('student-status-bar');
                 statusBar.classList.remove('hidden');
@@ -472,11 +513,10 @@
                 btnSubmit.style.display = 'none';
                 document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
                 
-                // Lock Inputs ONLY in Main Card
                 document.querySelectorAll('.main-card input, .main-card textarea, .main-card select').forEach(el => el.disabled = true);
                 document.getElementById('btn-clear-sig').style.display = 'none';
 
-                watchSubmission(docRef.id);
+                watchSubmission(docRef.id, collectionPath);
 
             } catch (e) {
                 alert("Gagal mengirim data: " + e.message);
@@ -485,8 +525,9 @@
             }
         };
 
-        function watchSubmission(docId) {
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId), (doc) => {
+        // 2. LISTEN PERUBAHAN STATUS (REAL-TIME)
+        function watchSubmission(docId, path) {
+            onSnapshot(doc(db, path, docId), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
                     if (data.status === "Sudah Dinilai") {
@@ -521,6 +562,7 @@
             });
         }
 
+        // 3. DASHBOARD GURU
         let loadedSubmissions = [];
 
         window.openDashboard = async function() {
@@ -531,8 +573,13 @@
 
             if (!currentUser) return;
 
+            const activeAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const collectionPath = typeof __app_id !== 'undefined' 
+                ? `artifacts/${activeAppId}/public/data/lkpd_submissions`
+                : 'lkpd_submissions';
+
             try {
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), (snapshot) => {
+                onSnapshot(collection(db, collectionPath), (snapshot) => {
                     loadedSubmissions = [];
                     snapshot.forEach((doc) => {
                         const d = doc.data();
@@ -551,7 +598,7 @@
                 });
             } catch (e) {
                 console.error(e);
-                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data. Periksa Config Firebase.</td></tr>`;
             }
         };
 
@@ -657,8 +704,13 @@
                 return;
             }
 
+            const activeAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const collectionPath = typeof __app_id !== 'undefined' 
+                ? `artifacts/${activeAppId}/public/data/lkpd_submissions`
+                : 'lkpd_submissions';
+
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId);
+                const docRef = doc(db, collectionPath, docId);
                 await updateDoc(docRef, {
                     nilai: nilai,
                     predikat: predikat,
