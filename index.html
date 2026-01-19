@@ -382,62 +382,37 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, Timestamp, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Logic otomatis deteksi lingkungan
-        let app, auth, db, currentUser;
-        let collectionPath = 'lkpd_submissions'; // Default path untuk GitHub Pages
+        // ============================================
+        // CONFIG FIREBASE
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-FFct17BVAdsqii9DOuAQLZnGF25fzOA",
+            authDomain: "lkpd-pjok-smk.web.app",
+            projectId: "lkpd-pjok-smk",
+            storageBucket: "lkpd-pjok-smk.firebasestorage.app",
+            messagingSenderId: "1006297448814",
+            appId: "1:1006297448814:web:987593ba4365f4b5a7c17f"
+        };
+        // ============================================
 
-        let firebaseConfig;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        // Init Auth (Anonymous Login untuk siswa & guru)
+        signInAnonymously(auth)
+            .then(() => console.log("Terhubung ke Database ✅"))
+            .catch((error) => console.error("Gagal koneksi:", error));
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) currentUser = user;
+        });
+
+        // --- GLOBAL FUNCTIONS ATTACHED TO WINDOW ---
         
-        try {
-            // Cek apakah di Canvas (ada __firebase_config)
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
-                const currentAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                collectionPath = `artifacts/${currentAppId}/public/data/lkpd_submissions`; // Path Wajib Canvas
-            } else {
-                // Konfigurasi Pribadi Anda (untuk GitHub Pages / Luar)
-                firebaseConfig = {
-                    apiKey: "AIzaSyC-FFct17BVAdsqii9DOuAQLZnGF25fzOA",
-                    authDomain: "lkpd-pjok-smk.firebaseapp.com",
-                    projectId: "lkpd-pjok-smk",
-                    storageBucket: "lkpd-pjok-smk.firebasestorage.app",
-                    messagingSenderId: "1006297448814",
-                    appId: "1:1006297448814:web:987593ba4365f4b5a7c17f"
-                };
-            }
-        } catch(e) {
-            console.error("Config Error", e);
-        }
-
-        if (firebaseConfig) {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            // Auth Logic
-            const initAuth = async () => {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    console.error("Authentication failed:", error);
-                }
-            };
-            initAuth();
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    console.log("Terhubung ke Database ✅");
-                }
-            });
-        }
-
-        // --- GLOBAL FUNCTIONS ---
-        
+        // 1. SIMPAN DATA SISWA
         window.saveStudentData = async function() {
             if (!currentUser) {
                 alert("Sedang menghubungkan ke database... Tunggu sebentar.");
@@ -466,6 +441,9 @@
                 sikapSummary.push(checkedYa ? "Ya" : "Tidak");
             });
 
+            // Path Koleksi Root
+            const collectionPath = 'lkpd_submissions';
+
             const submissionData = {
                 kelas: kelas,
                 nama: nama,
@@ -486,7 +464,7 @@
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = 'Mengirim...';
 
-                // Gunakan path dinamis (collectionPath)
+                // Simpan ke collection "lkpd_submissions"
                 const docRef = await addDoc(collection(db, collectionPath), submissionData);
                 
                 const statusBar = document.getElementById('student-status-bar');
@@ -495,10 +473,11 @@
                 btnSubmit.style.display = 'none';
                 document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
                 
+                // Kunci Input LKPD (Hanya bagian formulir utama)
                 document.querySelectorAll('.main-card input, .main-card textarea, .main-card select').forEach(el => el.disabled = true);
                 document.getElementById('btn-clear-sig').style.display = 'none';
 
-                watchSubmission(docRef.id);
+                watchSubmission(docRef.id, collectionPath);
 
             } catch (e) {
                 alert("Gagal mengirim data: " + e.message);
@@ -507,8 +486,9 @@
             }
         };
 
-        function watchSubmission(docId) {
-            onSnapshot(doc(db, collectionPath, docId), (doc) => {
+        // 2. LISTEN PERUBAHAN STATUS (REAL-TIME)
+        function watchSubmission(docId, path) {
+            onSnapshot(doc(db, path, docId), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
                     if (data.status === "Sudah Dinilai") {
@@ -543,6 +523,7 @@
             });
         }
 
+        // 3. DASHBOARD GURU
         let loadedSubmissions = [];
 
         window.openDashboard = async function() {
@@ -554,6 +535,7 @@
             if (!currentUser) return;
 
             try {
+                const collectionPath = 'lkpd_submissions';
                 onSnapshot(collection(db, collectionPath), (snapshot) => {
                     loadedSubmissions = [];
                     snapshot.forEach((doc) => {
@@ -573,7 +555,7 @@
                 });
             } catch (e) {
                 console.error(e);
-                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data. Periksa Config Firebase.</td></tr>`;
             }
         };
 
@@ -680,7 +662,7 @@
             }
 
             try {
-                const docRef = doc(db, collectionPath, docId);
+                const docRef = doc(db, 'lkpd_submissions', docId);
                 await updateDoc(docRef, {
                     nilai: nilai,
                     predikat: predikat,
