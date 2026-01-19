@@ -20,7 +20,6 @@
             background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2394a3b8' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E");
         }
 
-        /* Grid khusus untuk form identitas agar titik dua sejajar rapi */
         .identity-grid {
             display: grid;
             grid-template-columns: 140px 10px 1fr;
@@ -28,7 +27,6 @@
             row-gap: 0.75rem;
         }
 
-        /* Checkbox custom style */
         .custom-checkbox {
             width: 1.25rem;
             height: 1.25rem;
@@ -44,8 +42,6 @@
             .container { max-width: 100% !important; width: 100% !important; padding: 20px !important; }
             .no-print { display: none !important; }
             .main-card { box-shadow: none !important; border: none !important; border-radius: 0; }
-            
-            /* Form styling for print */
             input, textarea, select { 
                 border: none !important; 
                 border-bottom: 1px solid #94a3b8 !important; 
@@ -55,11 +51,9 @@
                 -webkit-appearance: none;
                 appearance: none;
             }
-            
-            /* Hilangkan placeholder saat print */
             ::placeholder { color: transparent; }
-            
-            /* Page break rules */
+            /* Hide empty elements in print */
+            #student-catatan:empty { display: none; }
             .page-break { page-break-before: always; }
             .avoid-break { page-break-inside: avoid; }
         }
@@ -74,6 +68,29 @@
         </svg>
         Akses Guru
     </button>
+
+    <!-- STATUS BAR SISWA (Real-time Feedback) -->
+    <div id="student-status-bar" class="hidden fixed bottom-0 left-0 right-0 bg-yellow-100 border-t-4 border-yellow-500 p-4 z-[60] shadow-lg no-print slide-up">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="status-icon" class="animate-spin text-yellow-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg" id="status-title">Menunggu Penilaian Guru...</h3>
+                    <p class="text-sm text-slate-600" id="status-desc">Mohon tunggu sebentar, jangan tutup halaman ini.</p>
+                </div>
+            </div>
+            <button id="btn-print-report" onclick="window.print()" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-all flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H5a2 2 0 012 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                CETAK LAPORAN (PDF)
+            </button>
+        </div>
+    </div>
 
     <!-- MODAL LOGIN -->
     <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex items-center justify-center no-print backdrop-blur-sm transition-opacity">
@@ -97,6 +114,76 @@
         </div>
     </div>
 
+    <!-- MODAL DASHBOARD DATA & GRADING -->
+    <div id="dashboard-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[200] flex flex-col p-2 md:p-6 no-print overflow-hidden backdrop-blur-md">
+        <div class="bg-white w-full h-full rounded-xl shadow-2xl flex flex-col overflow-hidden relative">
+            
+            <!-- Header Dashboard -->
+            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-500 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg">Dashboard Data & Penilaian</h2>
+                        <p class="text-xs text-slate-400" id="status-db">Memuat data...</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-bold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span class="hidden md:inline">Download Excel</span>
+                    </button>
+                    <button onclick="closeDashboard()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-bold">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area (Split View or List) -->
+            <div class="flex-1 flex overflow-hidden">
+                
+                <!-- List Siswa -->
+                <div id="student-list-container" class="w-full md:w-1/2 lg:w-2/3 overflow-auto p-4 bg-slate-50 border-r border-slate-200">
+                    <table class="w-full text-sm text-left text-slate-600 border-collapse">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-200 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 rounded-tl-lg">Kelas & Nama</th>
+                                <th class="px-4 py-3">Pertemuan</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                                <th class="px-4 py-3 text-center rounded-tr-lg">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-body" class="bg-white divide-y divide-slate-200">
+                            <!-- Data -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Grading Panel (Hidden on mobile initially) -->
+                <div id="grading-panel" class="hidden md:flex w-full md:w-1/2 lg:w-1/3 flex-col bg-white border-l border-slate-200 overflow-hidden relative">
+                    <div class="p-4 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800">📝 Form Penilaian Guru</h3>
+                        <button onclick="closeGradingPanel()" class="md:hidden text-slate-500 hover:text-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-4 space-y-6" id="grading-content">
+                        <div class="text-center text-slate-400 mt-10">
+                            <p>Pilih siswa dari daftar di sebelah kiri untuk mulai menilai.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-[210mm] mx-auto container space-y-6">
         
         <!-- CONTROL PANEL (GURU) -->
@@ -113,6 +200,9 @@
                     <option value="2">Pertemuan 2: Lari Jarak Menengah</option>
                     <option value="3">Pertemuan 3: Lari Jarak Jauh (Endurance)</option>
                 </select>
+                <button onclick="openDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2.5 rounded font-bold transition w-full sm:w-auto flex items-center gap-2">
+                    📂 Dashboard & Penilaian
+                </button>
                 <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2.5 rounded font-bold transition w-full sm:w-auto">
                     Keluar
                 </button>
@@ -124,14 +214,11 @@
             
             <!-- HEADER -->
             <div class="p-8 border-b-2 border-slate-800 relative text-center">
-                <!-- Logo -->
                 <div class="hidden md:flex absolute top-6 left-8 w-16 h-16 bg-white border-2 border-slate-800 rounded items-center justify-center text-[10px] text-slate-800 font-black leading-tight text-center">
                     LOGO<br>SEKOLAH
                 </div>
-                
                 <h1 class="text-2xl font-black text-slate-900 tracking-tight uppercase mb-1">LKPD & PORTOFOLIO SISWA</h1>
                 <h2 class="text-sm font-bold text-slate-600 uppercase tracking-[0.2em] mb-4">Pendidikan Jasmani, Olahraga, dan Kesehatan</h2>
-                
                 <div class="inline-flex gap-0 text-xs font-semibold border border-slate-300 rounded overflow-hidden">
                     <span class="bg-slate-100 text-slate-600 px-4 py-1.5 border-r border-slate-300">Fase E (Kelas X)</span>
                     <span class="bg-white text-blue-700 px-4 py-1.5 uppercase">Materi Pokok: Lari (Jarak Pendek s.d. Jauh)</span>
@@ -140,7 +227,7 @@
 
             <div class="p-8 md:p-10 space-y-8">
                 
-                <!-- IDENTITAS OTOMATIS (MODIFIKASI) -->
+                <!-- IDENTITAS -->
                 <div class="flex flex-col md:flex-row justify-between items-start gap-8 border-b-2 border-dashed border-slate-300 pb-6 avoid-break">
                     <div class="w-full md:w-2/3 identity-grid text-sm">
                         <label class="font-bold text-slate-700 uppercase">Kelas</label>
@@ -223,78 +310,35 @@
                                     <th class="p-2 border border-slate-300 w-12 text-center">Tdk</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-slate-800">
-                                <tr>
-                                    <td class="p-2 border border-slate-300 text-center font-bold">1</td>
-                                    <td class="p-2 border border-slate-300">
-                                        <strong>Beriman & Bertakwa:</strong> Menjaga sopan santun dan tidak berkata kasar saat merasa lelah atau emosi.
-                                    </td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                </tr>
-                                <tr class="bg-slate-50">
-                                    <td class="p-2 border border-slate-300 text-center font-bold">2</td>
-                                    <td class="p-2 border border-slate-300">
-                                        <strong>Mandiri:</strong> Tidak banyak mengeluh dan berusaha menyelesaikan tugas lari sesuai kemampuan sendiri.
-                                    </td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 border border-slate-300 text-center font-bold">3</td>
-                                    <td class="p-2 border border-slate-300">
-                                        <strong>Gotong Royong:</strong> Memberi semangat (support) kepada teman yang tertinggal atau kesulitan saat lari.
-                                    </td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                </tr>
-                                <tr class="bg-slate-50">
-                                    <td class="p-2 border border-slate-300 text-center font-bold">4</td>
-                                    <td class="p-2 border border-slate-300">
-                                        <strong>Bernalar Kritis:</strong> Berani bertanya jika belum paham teknik atau mampu menjawab pertanyaan guru.
-                                    </td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 border border-slate-300 text-center font-bold">5</td>
-                                    <td class="p-2 border border-slate-300">
-                                        <strong>Kreatif:</strong> Mencari solusi sederhana saat latihan (misal: mengatur napas sendiri agar tidak cepat capek).
-                                    </td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                                </tr>
+                            <tbody class="text-slate-800" id="checklist-sikap-body">
+                                <!-- JS Generated -->
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- V. VALIDASI -->
-                <section class="mt-8 pt-4 border-t-2 border-slate-800 flex flex-col md:flex-row justify-between gap-6 avoid-break">
+                <!-- V. VALIDASI (READ ONLY UNTUK SISWA, UPDATE REALTIME) -->
+                <section class="mt-8 pt-4 border-t-2 border-slate-800 flex flex-col md:flex-row justify-between gap-6 avoid-break opacity-75 transition-opacity duration-500" id="validation-section">
                     
                     <!-- Form Nilai -->
-                    <div class="flex-1 bg-blue-50 border border-blue-200 p-4 rounded relative">
-                        <div class="absolute -top-3 left-3 bg-blue-600 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded">Diisi Guru</div>
+                    <div class="flex-1 bg-gray-50 border border-gray-200 p-4 rounded relative" id="score-card">
+                        <div class="absolute -top-3 left-3 bg-gray-500 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded" id="score-badge">Diisi Guru</div>
                         
                         <div class="flex gap-4 mb-3 mt-1">
                             <div class="w-1/2">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Predikat</label>
-                                <select class="w-full border border-blue-300 rounded px-2 py-1 text-sm font-bold bg-white text-slate-800">
-                                    <option value="">- Pilih -</option>
-                                    <option value="A">Sangat Baik</option>
-                                    <option value="B">Baik</option>
-                                    <option value="C">Cukup</option>
-                                    <option value="D">Kurang</option>
-                                </select>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Predikat</label>
+                                <input type="text" id="student-predikat" disabled placeholder="-" class="w-full border-b border-gray-300 bg-transparent text-sm font-bold text-gray-800">
                             </div>
                             <div class="w-1/2">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Nilai (0-100)</label>
-                                <input type="number" class="w-full border border-blue-300 rounded px-2 py-1 text-sm font-bold bg-white text-center">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nilai</label>
+                                <input type="text" id="student-nilai" disabled placeholder="-" class="w-full border-b border-gray-300 bg-transparent text-sm font-bold text-gray-800 text-center">
                             </div>
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Catatan Evaluasi</label>
-                            <textarea id="eval-note" class="w-full bg-white border border-blue-300 rounded p-2 text-xs h-12 resize-none" placeholder="Tulis catatan..."></textarea>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Catatan Evaluasi</label>
+                            <div id="student-catatan" class="w-full border-b border-gray-300 p-2 text-xs h-12 text-gray-400 italic">
+                                Menunggu penilaian guru...
+                            </div>
                         </div>
                     </div>
 
@@ -303,26 +347,28 @@
                         <div class="text-center w-32">
                             <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Siswa</p>
                             <canvas id="sig-siswa" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors"></canvas>
-                            <button onclick="clearSig('sig-siswa')" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button>
+                            <button onclick="clearSig('sig-siswa')" id="btn-clear-sig" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button>
                         </div>
                         <div class="text-center w-32">
                             <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Guru Mapel</p>
-                            <canvas id="sig-guru" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors"></canvas>
+                            <!-- TTD Guru Placeholder / Validated -->
+                            <div id="teacher-sig-box" class="w-32 h-20 bg-gray-50 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-300 italic">
+                                TTD Guru
+                            </div>
                             <p class="text-[10px] font-bold mt-1 text-slate-800">M. Nanda S.N., S.Kom.</p>
-                            <button onclick="clearSig('sig-guru')" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- FOOTER -->
-                <div class="no-print pt-6 pb-20">
-                    <button onclick="window.print()" class="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-4 rounded-lg shadow-lg flex items-center justify-center gap-3 transition-all transform hover:-translate-y-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H5a2 2 0 012 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                <!-- FOOTER & ACTION BUTTONS -->
+                <div class="no-print pt-6 pb-20 space-y-3">
+                    <button id="btn-submit-lkpd" onclick="saveStudentData()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
-                        CETAK KE PDF / PRINT
+                        KIRIM LKPD (UNTUK DINILAI GURU)
                     </button>
-                    <p class="text-center text-xs text-slate-400 mt-3">Gunakan kertas A4 dan atur skala ke "Default" pada pengaturan printer.</p>
+                    <p class="text-center text-xs text-slate-400" id="submit-hint">Pastikan semua data sudah benar sebelum dikirim. Guru akan memberikan nilai melalui sistem.</p>
                 </div>
 
             </div>
@@ -330,8 +376,368 @@
         <p class="text-center text-slate-400 text-[10px] mt-4 mb-8 no-print">&copy; 2026 Platform Merdeka Mengajar - Modul PJOK</p>
     </div>
 
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, Timestamp, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Setup Firebase
+        const apiKey = ""; 
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                console.log("User authenticated");
+            }
+        });
+
+        // --- 1. SAVE FUNCTION FOR STUDENT (AND START LISTENER) ---
+        window.saveStudentData = async function() {
+            if (!currentUser) {
+                alert("Sedang menghubungkan ke database... coba lagi.");
+                return;
+            }
+
+            const kelas = document.getElementById('class-select').value;
+            const studentSelect = document.getElementById('student-select');
+            const nama = studentSelect.options[studentSelect.selectedIndex]?.text;
+            const tgl = document.getElementById('student-date').value;
+            const pertemuan = document.getElementById('meetingSelector').options[document.getElementById('meetingSelector').selectedIndex].text;
+
+            if (!kelas || !studentSelect.value || !tgl) {
+                alert("Harap lengkapi Nama, Kelas, dan Tanggal!");
+                return;
+            }
+
+            // Collect Answers
+            const jawabanRefleksi = [];
+            document.querySelectorAll('#content-soal textarea').forEach((ta, idx) => {
+                jawabanRefleksi.push(ta.value || "-");
+            });
+
+            // Collect Checklist
+            const sikapSummary = [];
+            document.querySelectorAll('#checklist-sikap-body tr').forEach((tr, idx) => {
+                const checkedYa = tr.querySelector('input[type="checkbox"]:first-child').checked;
+                const checkedTidak = tr.querySelector('input[type="checkbox"]:last-child').checked;
+                sikapSummary.push(checkedYa ? "Ya" : (checkedTidak ? "Tidak" : "-"));
+            });
+
+            const submissionData = {
+                kelas: kelas,
+                nama: nama,
+                no_absen: studentSelect.value,
+                tanggal: tgl,
+                pertemuan: pertemuan,
+                jawaban_refleksi: jawabanRefleksi, 
+                sikap_check: sikapSummary,
+                status: "Belum Dinilai",
+                nilai: "-",
+                predikat: "-",
+                catatan: "-",
+                timestamp: Timestamp.now()
+            };
+
+            try {
+                // Change UI to loading state
+                const btnSubmit = document.getElementById('btn-submit-lkpd');
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = 'Mengirim...';
+
+                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), submissionData);
+                
+                // Success: Show Status Bar
+                const statusBar = document.getElementById('student-status-bar');
+                statusBar.classList.remove('hidden');
+                
+                // Hide Submit Button
+                btnSubmit.style.display = 'none';
+                document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
+                
+                // Lock Inputs
+                document.querySelectorAll('input, textarea, select').forEach(el => el.disabled = true);
+                document.getElementById('btn-clear-sig').style.display = 'none';
+
+                // START LISTENING TO THIS DOCUMENT
+                watchSubmission(docRef.id);
+
+            } catch (e) {
+                alert("Gagal mengirim data: " + e.message);
+                document.getElementById('btn-submit-lkpd').disabled = false;
+                document.getElementById('btn-submit-lkpd').innerHTML = 'KIRIM LKPD (UNTUK DINILAI GURU)';
+            }
+        }
+
+        // --- REAL-TIME LISTENER ---
+        function watchSubmission(docId) {
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId), (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    
+                    // Check if graded
+                    if (data.status === "Sudah Dinilai") {
+                        // Update UI with Grade
+                        document.getElementById('student-predikat').value = data.predikat;
+                        document.getElementById('student-nilai').value = data.nilai;
+                        document.getElementById('student-catatan').innerText = data.catatan;
+                        document.getElementById('student-catatan').classList.remove('italic', 'text-gray-400');
+                        document.getElementById('student-catatan').classList.add('text-slate-800');
+
+                        // Update Visuals
+                        document.getElementById('validation-section').classList.remove('opacity-75');
+                        document.getElementById('score-card').classList.replace('bg-gray-50', 'bg-blue-50');
+                        document.getElementById('score-card').classList.replace('border-gray-200', 'border-blue-200');
+                        document.getElementById('score-badge').classList.replace('bg-gray-500', 'bg-blue-600');
+                        document.getElementById('score-badge').innerText = "SUDAH DINILAI";
+
+                        // Update Teacher Signature Placeholder
+                        const sigBox = document.getElementById('teacher-sig-box');
+                        sigBox.innerHTML = '<span class="text-green-600 font-bold font-mono border-2 border-green-600 p-1 rounded -rotate-6">APPROVED</span>';
+                        sigBox.classList.remove('bg-gray-50', 'text-gray-300');
+                        sigBox.classList.add('bg-white');
+
+                        // Update Status Bar
+                        document.getElementById('status-icon').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+                        document.getElementById('status-icon').classList.remove('animate-spin');
+                        document.getElementById('status-title').innerText = "Selesai Dinilai!";
+                        document.getElementById('status-title').classList.add('text-green-700');
+                        document.getElementById('status-desc').innerText = "Nilai sudah keluar. Silakan cetak laporan.";
+                        document.getElementById('student-status-bar').classList.replace('border-yellow-500', 'border-green-500');
+                        document.getElementById('student-status-bar').classList.replace('bg-yellow-100', 'bg-green-50');
+
+                        // Show Print Button
+                        document.getElementById('btn-print-report').classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        // --- 2. DASHBOARD & GRADING FUNCTIONS (TEACHER) ---
+        let loadedSubmissions = []; // Store fetched data
+
+        window.openDashboard = async function() {
+            document.getElementById('dashboard-modal').classList.remove('hidden');
+            document.getElementById('status-db').innerText = "Mengambil data terbaru...";
+            
+            const tbody = document.getElementById('dashboard-body');
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center"><div class="animate-pulse">Loading data...</div></td></tr>';
+
+            if (!currentUser) return;
+
+            try {
+                // Listen to ALL submissions for real-time dashboard updates
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions'), (snapshot) => {
+                    loadedSubmissions = [];
+                    snapshot.forEach((doc) => {
+                        const d = doc.data();
+                        d.id = doc.id;
+                        loadedSubmissions.push(d);
+                    });
+
+                    // Sort by Class then Name
+                    loadedSubmissions.sort((a, b) => {
+                        if (a.kelas === b.kelas) return a.nama.localeCompare(b.nama);
+                        return a.kelas.localeCompare(b.kelas);
+                    });
+
+                    window.cachedSubmissions = loadedSubmissions; 
+                    renderStudentList(loadedSubmissions);
+                    document.getElementById('status-db').innerText = `Total: ${loadedSubmissions.length} Data Siswa`;
+                });
+
+            } catch (e) {
+                console.error(e);
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">Gagal memuat data.</td></tr>`;
+            }
+        }
+
+        function renderStudentList(data) {
+            const tbody = document.getElementById('dashboard-body');
+            tbody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">Belum ada data masuk.</td></tr>';
+                return;
+            }
+
+            data.forEach((sub) => {
+                const statusColor = sub.status === "Sudah Dinilai" ? "text-green-600 bg-green-100" : "text-amber-600 bg-amber-100";
+                
+                const row = `
+                    <tr class="hover:bg-slate-50 cursor-pointer border-b border-slate-100" onclick="openGradingPanel('${sub.id}')">
+                        <td class="px-4 py-3">
+                            <div class="font-bold text-slate-800 text-sm">${sub.nama}</div>
+                            <div class="text-xs text-slate-500">${sub.kelas} • Absen ${sub.no_absen}</div>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[100px]">${sub.pertemuan}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-bold ${statusColor}">${sub.status}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <button class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded text-xs font-bold">
+                                Nilai
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // --- 3. OPEN GRADING PANEL ---
+        window.openGradingPanel = function(docId) {
+            const sub = loadedSubmissions.find(s => s.id === docId);
+            if (!sub) return;
+
+            const panel = document.getElementById('grading-panel');
+            panel.classList.remove('hidden');
+            panel.classList.add('flex'); 
+
+            const container = document.getElementById('grading-content');
+            
+            let answersHtml = '';
+            if (sub.jawaban_refleksi && sub.jawaban_refleksi.length > 0) {
+                sub.jawaban_refleksi.forEach((ans, idx) => {
+                    answersHtml += `
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200 text-xs mb-2">
+                            <div class="font-bold text-slate-500 mb-1">Jawaban No. ${idx + 1}</div>
+                            <div class="text-slate-800 italic">"${ans}"</div>
+                        </div>
+                    `;
+                });
+            } else {
+                answersHtml = '<p class="text-xs text-slate-400 italic">Tidak ada jawaban esai.</p>';
+            }
+
+            container.innerHTML = `
+                <div class="border-b border-slate-200 pb-4 mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">${sub.nama}</h2>
+                    <p class="text-xs text-slate-500">${sub.kelas} • ${sub.tanggal}</p>
+                    <div class="mt-2 text-xs bg-blue-50 text-blue-700 p-2 rounded border border-blue-100">
+                        <strong>Materi:</strong> ${sub.pertemuan}
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="font-bold text-sm text-slate-700 mb-2">📖 Jawaban Refleksi Siswa</h4>
+                    ${answersHtml}
+                </div>
+
+                <div class="bg-yellow-50 p-4 rounded border border-yellow-200">
+                    <h4 class="font-bold text-sm text-yellow-800 mb-3">🏅 Input Penilaian</h4>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Nilai (0-100)</label>
+                            <input type="number" id="grade-val" value="${sub.nilai !== '-' ? sub.nilai : ''}" class="w-full border border-slate-300 rounded p-2 text-sm text-center font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Predikat</label>
+                            <select id="grade-pred" class="w-full border border-slate-300 rounded p-2 text-sm">
+                                <option value="A" ${sub.predikat === 'A' ? 'selected' : ''}>A (Sangat Baik)</option>
+                                <option value="B" ${sub.predikat === 'B' ? 'selected' : ''}>B (Baik)</option>
+                                <option value="C" ${sub.predikat === 'C' ? 'selected' : ''}>C (Cukup)</option>
+                                <option value="D" ${sub.predikat === 'D' ? 'selected' : ''}>D (Kurang)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Catatan Guru</label>
+                            <textarea id="grade-note" class="w-full border border-slate-300 rounded p-2 text-xs h-20 resize-none" placeholder="Berikan umpan balik...">${sub.catatan !== '-' ? sub.catatan : ''}</textarea>
+                        </div>
+                        
+                        <button onclick="submitGrade('${docId}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow text-sm mt-2">
+                            SIMPAN NILAI
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.submitGrade = async function(docId) {
+            const nilai = document.getElementById('grade-val').value;
+            const predikat = document.getElementById('grade-pred').value;
+            const catatan = document.getElementById('grade-note').value;
+
+            if (!nilai) {
+                alert("Masukkan nilai terlebih dahulu!");
+                return;
+            }
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'lkpd_submissions', docId);
+                await updateDoc(docRef, {
+                    nilai: nilai,
+                    predikat: predikat,
+                    catatan: catatan,
+                    status: "Sudah Dinilai"
+                });
+
+                alert("✅ Nilai berhasil disimpan!");
+            } catch (e) {
+                console.error(e);
+                alert("Gagal menyimpan nilai: " + e.message);
+            }
+        }
+
+        window.closeGradingPanel = function() {
+            document.getElementById('grading-panel').classList.add('hidden');
+            document.getElementById('grading-panel').classList.remove('flex');
+        }
+
+        window.closeDashboard = function() {
+            document.getElementById('dashboard-modal').classList.add('hidden');
+        }
+
+        window.exportToCSV = function() {
+            if (!window.cachedSubmissions || window.cachedSubmissions.length === 0) {
+                alert("Tidak ada data untuk diunduh.");
+                return;
+            }
+            const rows = [
+                ["Tanggal", "Kelas", "No Absen", "Nama Siswa", "Materi", "Status", "Predikat", "Nilai", "Catatan Guru", "Jawaban Refleksi 1", "Jawaban Refleksi 2", "Jawaban Refleksi 3"]
+            ];
+            window.cachedSubmissions.forEach(sub => {
+                const jwb = sub.jawaban_refleksi || ["-", "-", "-"];
+                rows.push([
+                    sub.tanggal, sub.kelas, sub.no_absen, `"${sub.nama}"`, `"${sub.pertemuan}"`,
+                    sub.status, sub.predikat, sub.nilai, `"${sub.catatan}"`,
+                    `"${jwb[0] || '-'}"`, `"${jwb[1] || '-'}"`, `"${jwb[2] || '-'}"`
+                ]);
+            });
+            let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Rekap_Nilai_PJOK.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
     <script>
-        // === DATABASE SISWA ===
+        // === DATABASE SISWA & KONTEN ===
         const studentData = {
             "X TKJ A": [
                 "ALDO BARETO", "DARMA YANTI", "DIRLY REVA RADITYA", "FAIZ FATAH HILLAH", 
@@ -360,40 +766,59 @@
             ]
         };
 
-        // Fungsi Load Siswa berdasarkan Kelas
+        const sikapList = [
+            { title: "Beriman & Bertakwa", desc: "Menjaga sopan santun dan tidak berkata kasar saat merasa lelah atau emosi." },
+            { title: "Mandiri", desc: "Tidak banyak mengeluh dan berusaha menyelesaikan tugas lari sesuai kemampuan sendiri." },
+            { title: "Gotong Royong", desc: "Memberi semangat (support) kepada teman yang tertinggal atau kesulitan saat lari." },
+            { title: "Bernalar Kritis", desc: "Berani bertanya jika belum paham teknik atau mampu menjawab pertanyaan guru." },
+            { title: "Kreatif", desc: "Mencari solusi sederhana saat latihan (misal: mengatur napas sendiri agar tidak cepat capek)." }
+        ];
+
+        // Load Siswa & Generate UI
         function loadStudents() {
             const classSelect = document.getElementById('class-select');
             const studentSelect = document.getElementById('student-select');
             const selectedClass = classSelect.value;
-            
-            // Reset dropdown siswa
             studentSelect.innerHTML = '<option value="">-- Pilih Nama Siswa --</option>';
             document.getElementById('absen-input').value = "";
-
             if (selectedClass && studentData[selectedClass]) {
                 studentData[selectedClass].forEach((name, index) => {
                     const option = document.createElement('option');
-                    option.value = index + 1; // Menyimpan nomor absen sebagai value
+                    option.value = index + 1;
                     option.text = name;
                     studentSelect.appendChild(option);
                 });
             }
         }
 
-        // Fungsi Update No Absen otomatis
         function updateAbsen() {
             const studentSelect = document.getElementById('student-select');
             const absenInput = document.getElementById('absen-input');
-            
-            if (studentSelect.value) {
-                absenInput.value = studentSelect.value; // Value option adalah index+1 (no absen)
-            } else {
-                absenInput.value = "";
-            }
+            if (studentSelect.value) absenInput.value = studentSelect.value;
+            else absenInput.value = "";
+        }
+
+        // Generate Checklist Sikap
+        const checklistBody = document.getElementById('checklist-sikap-body');
+        if (checklistBody) {
+            checklistBody.innerHTML = '';
+            sikapList.forEach((item, idx) => {
+                const bgClass = idx % 2 === 0 ? '' : 'bg-slate-50';
+                checklistBody.innerHTML += `
+                    <tr class="${bgClass}">
+                        <td class="p-2 border border-slate-300 text-center font-bold">${idx + 1}</td>
+                        <td class="p-2 border border-slate-300">
+                            <strong>${item.title}:</strong> ${item.desc}
+                        </td>
+                        <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                        <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                    </tr>
+                `;
+            });
         }
 
         // === LOGIKA AKSES GURU ===
-        const TEACHER_PIN = "270302"; // PIN GURU
+        const TEACHER_PIN = "270302";
 
         function openLoginModal() {
             document.getElementById('login-modal').classList.remove('hidden');
@@ -410,12 +835,9 @@
             if (input === TEACHER_PIN) {
                 const panel = document.getElementById('teacher-panel');
                 const btn = document.getElementById('btn-login');
-                
                 closeLoginModal();
                 panel.classList.remove('hidden');
-                btn.classList.add('hidden'); 
-                
-                // Scroll to top smoothly
+                btn.classList.add('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 alert("PIN Salah! Coba lagi.");
@@ -434,7 +856,7 @@
             if (e.key === 'Enter') checkPin();
         });
 
-        // === DATA RPP / MODUL AJAR (Bahasa Akademis - SMK Kelas 10) ===
+        // === DATA RPP / MODUL AJAR ===
         const rppData = {
             1: {
                 title: "Pertemuan 1: Lari Jarak Pendek (Sprint)",
@@ -466,8 +888,7 @@
                     "Apa yang paling sulit kamu rasakan saat melakukan start jongkok tadi? Apakah kakimu terasa licin atau kuat menolak?",
                     "Saat lari kencang tadi, apakah kamu lari jinjit (ujung kaki) atau telapak rata? Mana yang menurutmu membuat larimu lebih cepat?",
                     "Saat aba-aba 'Siap' (panggul naik), apakah tanganmu terasa gemetar menahan berat badan? Ceritakan apa yang kamu rasakan di lenganmu!"
-                ],
-                evaluasi: "Siswa telah mempraktikkan start jongkok dengan baik. Fokus evaluasi pada posisi panggul saat aba-aba 'Siap' dan kekuatan tolakan kaki. Respon terhadap aba-aba start cukup responsif."
+                ]
             },
             2: {
                 title: "Pertemuan 2: Lari Jarak Menengah (800m - 1500m)",
@@ -498,8 +919,7 @@
                     "Apa bedanya rasa capek saat lari sprint (Pertemuan 1) dengan lari keliling lapangan hari ini? Mana yang lebih bikin napasmu 'ngos-ngosan'?",
                     "Apakah perutmu terasa sakit (suduk) atau napasmu sesak saat berlari tadi? Jika iya, apa yang kamu lakukan biar enakan?",
                     "Coba bayangkan jika kamu lari secepat kilat (sprint) di awal start tadi, kira-kira apa yang akan terjadi pada kakimu di putaran terakhir? Masih kuat atau lemas?"
-                ],
-                evaluasi: "Siswa mampu menerapkan teknik start berdiri yang efisien. Perlu peningkatan pada konsistensi irama lari (pacing) dan pengaturan napas agar tidak cepat lelah di putaran awal."
+                ]
             },
             3: {
                 title: "Pertemuan 3: Lari Jarak Jauh (Endurance)",
@@ -530,23 +950,16 @@
                     "Bagian tubuh mana yang paling pegal saat lari jarak jauh tadi? Kaki, napas, atau pundak? Ceritakan rasanya!",
                     "Apa yang kamu pikirkan saat merasa sangat capek tapi harus tetap lari? Kalimat apa yang kamu ucapkan dalam hati biar semangat lagi?",
                     "Mana yang lebih asik menurutmu: Lari terus-menerus dengan kecepatan sama, atau lari Fartlek (lari-jalan-lari) yang berubah-ubah? Kenapa?"
-                ],
-                evaluasi: "Evaluasi fokus pada daya tahan kardiovaskular siswa. Semangat dan mental juang dalam menyelesaikan sesi lari jarak jauh/fartlek menjadi poin penilaian utama."
+                ]
             }
         };
 
-        // === FUNGSI LOAD KONTEN ===
         function loadMeetingData() {
             const id = document.getElementById('meetingSelector').value;
             const data = rppData[id];
-
-            // Update Header Topik
             document.getElementById('display-meeting-title').innerText = data.title;
-            
-            // Update Materi
             document.getElementById('content-materi').innerHTML = data.materi;
 
-            // Update Aktivitas
             const actContainer = document.getElementById('content-aktivitas');
             actContainer.innerHTML = '';
             data.aktivitas.forEach((act, idx) => {
@@ -561,7 +974,6 @@
                 `;
             });
 
-            // Update Soal Refleksi
             const soalContainer = document.getElementById('content-soal');
             soalContainer.innerHTML = '';
             data.soal.forEach((soal, idx) => {
@@ -572,107 +984,47 @@
                     </div>
                 `;
             });
-
-            // Update Evaluasi Guru (Otomatis)
-            const evalNote = document.getElementById('eval-note');
-            if (evalNote) {
-                evalNote.value = data.evaluasi || "";
-            }
         }
 
-        // === LOGIKA TANGGAL & TANDA TANGAN ===
+        // Tanda Tangan Logic
         document.getElementById('student-date').valueAsDate = new Date();
-
         function setupSig(id) {
             const canvas = document.getElementById(id);
+            if(!canvas) return;
             const ctx = canvas.getContext('2d');
             let drawing = false;
-
-            // Setup resolusi tinggi untuk layar retina/HP
             function resizeCanvas() {
                 const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                // Simpan konten saat ini (jika ada) - opsional, di sini kita reset jika resize drastis
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
                 ctx.scale(ratio, ratio);
-                ctx.lineWidth = 2;
-                ctx.lineCap = 'round';
-                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
             }
-            
-            // Panggil resize saat awal
             setTimeout(resizeCanvas, 100);
-
-            // Fungsi mendapatkan posisi kursor/sentuhan relative terhadap canvas
             function getPos(e) {
                 const rect = canvas.getBoundingClientRect();
-                let clientX = e.clientX;
-                let clientY = e.clientY;
-
-                if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                }
-
                 return {
-                    x: clientX - rect.left,
-                    y: clientY - rect.top
+                    x: (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left,
+                    y: (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top
                 };
             }
-
-            function start(e) {
-                drawing = true;
-                ctx.beginPath();
-                const pos = getPos(e);
-                ctx.moveTo(pos.x, pos.y);
-                // Prevent scrolling saat menyentuh canvas
-                if(e.type === 'touchstart') e.preventDefault();
-            }
-
-            function move(e) {
-                if (!drawing) return;
-                const pos = getPos(e);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                if(e.type === 'touchmove') e.preventDefault();
-            }
-
-            function end() {
-                drawing = false;
-            }
-
-            // Event Listeners Mouse
-            canvas.addEventListener('mousedown', start);
-            canvas.addEventListener('mousemove', move);
-            canvas.addEventListener('mouseup', end);
-            canvas.addEventListener('mouseleave', end);
-
-            // Event Listeners Touch (HP/Tablet)
-            canvas.addEventListener('touchstart', start, { passive: false });
-            canvas.addEventListener('touchmove', move, { passive: false });
-            canvas.addEventListener('touchend', end);
+            const start = (e) => { drawing = true; ctx.beginPath(); const pos = getPos(e); ctx.moveTo(pos.x, pos.y); if(e.type==='touchstart') e.preventDefault(); };
+            const move = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); if(e.type==='touchmove') e.preventDefault(); };
+            const end = () => drawing = false;
+            canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
+            canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false}); canvas.addEventListener('touchend', end);
         }
-
         function clearSig(id) {
             const canvas = document.getElementById(id);
             const ctx = canvas.getContext('2d');
-            
-            // Clear dengan mempertimbangkan transformasi scale
-            ctx.save();
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.restore();
-            
-            ctx.beginPath();
+            ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.restore(); ctx.beginPath();
         }
 
-        // Inisialisasi
         window.addEventListener('load', () => {
-            loadMeetingData(); // Load data awal
+            loadMeetingData();
             setupSig('sig-siswa');
             setupSig('sig-guru');
         });
-
     </script>
 </body>
 </html>
