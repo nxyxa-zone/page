@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator LKPD & Portofolio PJOK</title>
+    <title>LKPD & Portofolio PJOK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -76,9 +76,9 @@
                 <div class="w-full">
                     <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Pilih Pertemuan:</label>
                     <select id="meetingSelector" onchange="loadMeetingData()" class="bg-slate-800 border border-slate-700 text-white text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-pointer hover:bg-slate-700 transition">
-                        <option value="1">Pertemuan 1: Sejarah & Teknik Dasar (Grip/Stance)</option>
-                        <option value="2">Pertemuan 2: Pukulan Spesifik (Lob, Dropshot, Netting)</option>
-                        <option value="3">Pertemuan 3: Smash, Peraturan & Game</option>
+                        <option value="1">Pertemuan 1: Lari Jarak Pendek (Start & Akselerasi)</option>
+                        <option value="2">Pertemuan 2: Lari Jarak Menengah (Strategi Pacing & Transisi)</option>
+                        <option value="3">Pertemuan 3: Lari Jarak Jauh (Endurance & Latihan Interval)</option>
                     </select>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                 
                 <div class="mt-4 flex justify-center gap-4 text-sm font-semibold text-slate-600">
                     <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Fase E (Kelas X)</span>
-                    <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Materi: Permainan Net (Bulu Tangkis)</span>
+                    <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Materi: Atletik (Lari Jarak Pendek, Menengah & Jauh)</span>
                 </div>
             </div>
 
@@ -173,7 +173,7 @@
                                 <tr>
                                     <td class="p-2 text-center border-r border-black font-semibold">1</td>
                                     <td class="p-2 border-r border-black">
-                                        <strong>Mandiri:</strong> Saya mempersiapkan raket/shuttlecock sendiri dan melakukan pemanasan dengan sungguh-sungguh tanpa disuruh.
+                                        <strong>Mandiri:</strong> Saya mempersiapkan pakaian/sepatu olahraga dan melakukan pemanasan dengan sungguh-sungguh tanpa disuruh.
                                     </td>
                                     <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
                                     <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
@@ -181,7 +181,7 @@
                                 <tr>
                                     <td class="p-2 text-center border-r border-black font-semibold">2</td>
                                     <td class="p-2 border-r border-black">
-                                        <strong>Gotong Royong:</strong> Saya membantu teman yang kesulitan melakukan teknik dan merapikan alat kembali setelah digunakan.
+                                        <strong>Gotong Royong:</strong> Saya membantu teman yang kesulitan melakukan teknik lari dan merapikan perlengkapan latihan setelah selesai.
                                     </td>
                                     <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
                                     <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
@@ -189,7 +189,7 @@
                                 <tr>
                                     <td class="p-2 text-center border-r border-black font-semibold">3</td>
                                     <td class="p-2 border-r border-black">
-                                        <strong>Bernalar Kritis:</strong> Saya mampu menjelaskan letak kesalahan saya sendiri saat pukulan kok tidak masuk/menyangkut.
+                                        <strong>Bernalar Kritis:</strong> Saya mampu menjelaskan letak kesalahan saya sendiri saat start atau saat fase lari jika tidak optimal.
                                     </td>
                                     <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
                                     <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
@@ -197,7 +197,7 @@
                                 <tr>
                                     <td class="p-2 text-center border-r border-black font-semibold">4</td>
                                     <td class="p-2 border-r border-black">
-                                        <strong>Tanggung Jawab:</strong> Saya datang tepat waktu dan memakai pakaian olahraga lengkap sesuai aturan.
+                                        <strong>Tanggung Jawab:</strong> Saya datang tepat waktu dan mengikuti instruksi keselamatan selama latihan.
                                     </td>
                                     <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
                                     <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
@@ -316,99 +316,96 @@
             }
         });
 
-        // === DATA SESUAI RPP ===
+        // === DATA SESUAI RPP (ATLETIK) ===
         const rppData = {
             1: {
-                title: "Pertemuan 1: Sejarah & Teknik Dasar",
+                title: "Pertemuan 1: Lari Jarak Pendek (Start & Akselerasi)",
                 materi: `
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">1. Sejarah Singkat</h4>
-                        <p class="mb-2">Permainan bulu tangkis berasal dari India (Poona) dan dikembangkan di Inggris. Organisasi dunia bernama BWF (Badminton World Federation), sedangkan di Indonesia adalah PBSI (Persatuan Bulutangkis Seluruh Indonesia) yang berdiri tahun 1951.</p>
+                        <h4 class="font-bold text-blue-800 mb-1">1. Pengantar Lari Jarak Pendek</h4>
+                        <p class="mb-2">Lari jarak pendek umumnya mencakup nomor 60m, 100m, 200m, dan 400m. Fokus utama adalah reaksi start, akselerasi, kecepatan maksimal, dan teknik berlari efisien.</p>
                     </div>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">2. Posisi Berdiri (Stance)</h4>
+                        <h4 class="font-bold text-blue-800 mb-1">2. Teknik Start</h4>
                         <ul class="list-disc ml-4 space-y-1">
-                            <li>Kaki dibuka selebar bahu dengan lutut sedikit ditekuk.</li>
-                            <li>Berat badan bertumpu di tengah agar mudah bergerak ke segala arah.</li>
-                            <li>Posisi siap (ready position) raket berada di depan dada.</li>
+                            <li>Posisi start (set) pada blok start: berat badan condong ke depan pada fase drive.</li>
+                            <li>Reaksi cepat terhadap bunyi start; tangan dan kaki bekerja serentak untuk mendorong ke depan.</li>
+                            <li>Fase drive (0–20 m): tubuh condong, langkah pendek dan cepat, kemudian naik ke posisi berlari tegak.</li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-bold text-blue-800 mb-1">3. Teknik Pegangan (Grip)</h4>
+                        <h4 class="font-bold text-blue-800 mb-1">3. Akselerasi & Teknik Berlari</h4>
                         <ul class="list-disc ml-4 space-y-1">
-                            <li><strong>Forehand Grip:</strong> Raket dipegang miring seperti sedang "berjabat tangan". Huruf V antara ibu jari dan telunjuk berada di bagian atas gagang.</li>
-                            <li><strong>Backhand Grip:</strong> Ibu jari diputar dan menekan pada permukaan yang lebar pada gagang raket untuk menambah tenaga dorongan.</li>
+                            <li>Pertahankan frekuensi langkah tinggi saat akselerasi, lalu perbaiki panjang langkah saat mencapai kecepatan maksimal.</li>
+                            <li>Pola ayunan lengan membantu keseimbangan dan momentum; siku sekitar 90 derajat.</li>
+                            <li>Pernafasan rileks, kepala netral, pandangan ke depan.</li>
                         </ul>
                     </div>`,
                 aktivitas: [
-                    { title: "Shadow Badminton (Bayangan)", desc: "Melakukan gerakan langkah kaki (footwork) ke 6 titik sudut lapangan dan ayunan raket tanpa bola untuk melatih kelincahan." },
-                    { title: "Grip Switching Drill", desc: "Siswa memutar raket mengubah pegangan forehand ke backhand berulang kali dengan cepat (durasi 1 menit)." },
-                    { title: "Service Pendek Berpasangan", desc: "Melakukan servis pendek menyilang (cross court) melewati garis servis depan lawan. Lakukan 10x percobaan." }
+                    { title: "Drill Start dari Blok / Posisi Set", desc: "Latihan start 10–20 m dari blok atau posisi set, fokus reaksi dan drive phase. Lakukan 6 percobaan." },
+                    { title: "Akselerasi 30 m", desc: "Dari posisi berdiri, sprint 30 m dengan fokus akselerasi; catat waktu setiap percobaan." },
+                    { title: "Relay Pendek (Passing Cepat)", desc: "Latihan bergantian sprint 50 m sebagai latihan pergantian kecepatan dan kerjasama tim." }
                 ],
                 soal: [
-                    "Jelaskan secara singkat perbedaan posisi ibu jari pada pegangan Forehand dan Backhand!",
-                    "Mengapa posisi lutut harus ditekuk (stance) saat menunggu bola dari lawan? Apa akibatnya jika berdiri tegak lurus?",
-                    "Sebutkan satu kesulitan utama yang kamu rasakan saat melakukan servis pendek!"
+                    "Jelaskan tiga poin penting yang harus diperhatikan saat melakukan start (set) dari blok!",
+                    "Mengapa fase drive (awal akselerasi) penting dalam lari jarak pendek? Apa akibatnya jika langsung tegak?",
+                    "Sebutkan satu kendala utama yang kamu rasakan saat melakukan akselerasi dan bagaimana cara memperbaikinya!"
                 ]
             },
             2: {
-                title: "Pertemuan 2: Teknik Pukulan Spesifik",
+                title: "Pertemuan 2: Lari Jarak Menengah (Strategi Pacing & Transisi)",
                 materi: `
-                    <p class="mb-3 font-semibold italic text-slate-600">Berikut adalah definisi teknik berdasarkan Glosarium Modul Ajar:</p>
+                    <p class="mb-3 font-semibold italic text-slate-600">Lari jarak menengah biasanya mencakup nomor 800 m hingga 1500 m, menggabungkan kecepatan dan daya tahan.</p>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">1. Pukulan Lob (Clear)</h4>
-                        <p class="mb-1"><strong>Definisi:</strong> Pukulan yang mengarah jauh ke belakang garis lapangan lawan.</p>
-                        <p><strong>Tujuan:</strong> Mendesak lawan ke area belakang sehingga area depan kosong, atau untuk memperbaiki posisi bertahan (defensive lob).</p>
+                        <h4 class="font-bold text-blue-800 mb-1">1. Karakteristik Lari Menengah</h4>
+                        <p class="mb-1"><strong>Definisi:</strong> Nomor yang memerlukan keseimbangan antara anaerob dan aerob; penting mengatur pacing.</p>
+                        <p><strong>Tujuan:</strong> Mempertahankan kecepatan optimal dengan efisien dan memanfaatkan transisi antara fase akselerasi dan kecepatan kompetitif.</p>
                     </div>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">2. Drop Shot</h4>
-                        <p class="mb-1"><strong>Definisi:</strong> Pukulan yang rendah, mengarahkan kok jatuh tipis di dekat jaring (net) lawan.</p>
-                        <p><strong>Kunci Teknik:</strong> Gerakan awal sama seperti smash (tipuan), namun saat perkenaan bola, tenaga dikurangi (disentuh halus).</p>
+                        <h4 class="font-bold text-blue-800 mb-1">2. Strategi Pacing</h4>
+                        <p class="mb-1"><strong>Teknik:</strong> Membagi energi (lap per lap) sehingga tidak terjadi kelelahan dini; negative split sering efektif.</p>
+                        <p><strong>Pernafasan & Ritme:</strong> Sinkronkan langkah dan napas untuk efisiensi.</p>
                     </div>
                     <div>
-                        <h4 class="font-bold text-blue-800 mb-1">3. Net Play (Netting)</h4>
-                        <p class="mb-1"><strong>Definisi:</strong> Permainan atau pukulan pendek yang dilakukan tepat di depan net.</p>
-                        <p><strong>Kunci Teknik:</strong> Mengambil bola setinggi mungkin di bibir net agar lawan sulit mengembalikan (rambut net).</p>
+                        <h4 class="font-bold text-blue-800 mb-1">3. Transisi & Finishing</h4>
+                        <p class="mb-1"><strong>Kunci:</strong> Meningkatkan laju menuju akhir lomba (kick) dengan mempertahankan teknik; timing serangan akhir penting.</p>
                     </div>`,
                 aktivitas: [
-                    { title: "Drill Lob to Lob", desc: "Saling berhadapan, memukul bola melambung tinggi ke garis belakang (baseline) secara terus menerus tanpa bola mati." },
-                    { title: "Target Drop Shot", desc: "Satu siswa memberikan umpan lambung, siswa lain melakukan dropshot yang diarahkan ke keranjang/target di sudut depan net." },
-                    { title: "Permainan Net (Netting)", desc: "Bermain 1 lawan 1 hanya di area depan (garis servis ke net). Bola tidak boleh dipukul keras, hanya sentuhan halus." }
+                    { title: "Interval 4x400m (Pacing)", desc: "Lakukan 4 repetisi 400 m dengan recovery singkat; fokus stabilitas tempo dan transisi di tiap putaran." },
+                    { title: "Tempo Run 20 menit", desc: "Lari pada kecepatan sedikit di bawah race pace untuk meningkatkan ambang laktat." },
+                    { title: "Latihan Negative Split", desc: "Lari 800 m dengan membagi kecepatan agar bagian kedua lebih cepat dari bagian pertama." }
                 ],
                 soal: [
-                    "Berdasarkan praktik tadi, jelaskan perbedaan tenaga yang digunakan saat melakukan Lob dibandingkan Drop Shot!",
-                    "Apa yang terjadi jika kamu mengambil bola Netting terlalu rendah (sudah jauh turun dari bibir net)?",
-                    "Jelaskan strategi menggunakan Drop Shot untuk mengecoh lawan!"
+                    "Jelaskan perbedaan strategi pacing antara lari 800 m dan 1500 m!",
+                    "Apa manfaat melakukan negative split dalam latihan jarak menengah?",
+                    "Kapan saat yang tepat untuk melakukan 'kick' (peningkatan kecepatan) dalam lomba 800 m?"
                 ]
             },
             3: {
-                title: "Pertemuan 3: Pukulan Keras & Permainan",
+                title: "Pertemuan 3: Lari Jarak Jauh (Endurance & Latihan Interval)",
                 materi: `
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">1. Smash</h4>
-                        <p>Pukulan overhead yang dilakukan dengan kekuatan penuh ke arah bawah lapangan lawan secara tajam. Titik perkenaan bola harus berada di titik tertinggi jangkauan lengan.</p>
+                        <h4 class="font-bold text-blue-800 mb-1">1. Karakteristik Lari Jarak Jauh</h4>
+                        <p>Lari jauh mencakup nomor 3000 m ke atas, cross-country, atau jalan lintas alam. Fokus pada daya tahan aerob, ekonomi gerak, dan manajemen energi.</p>
                     </div>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">2. Drive</h4>
-                        <p>Pukulan datar dan cepat yang melintas tipis di atas net. Biasanya digunakan dalam permainan ganda untuk menekan lawan atau mengembalikan smash.</p>
+                        <h4 class="font-bold text-blue-800 mb-1">2. Latihan Endurance</h4>
+                        <p><strong>Metode:</strong> Long run, fartlek, latihan ambang (threshold) dan interval panjang untuk meningkatkan kapasitas aerob.</p>
+                        <p><strong>Pola:</strong> Volume mingguan dan periodisasi penting untuk menghindari overtraining.</p>
                     </div>
                     <div>
-                        <h4 class="font-bold text-blue-800 mb-1">3. Peraturan Permainan Dasar</h4>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <li><strong>Sistem Skor:</strong> Rally Point 2 x 21 (Deuce jika 20-20).</li>
-                            <li><strong>Area Servis:</strong> Ganda (lebar dan pendek), Tunggal (panjang dan sempit).</li>
-                            <li><strong>Fault (Pelanggaran):</strong> Raket menyentuh net, kok tersangkut, kaki menginjak garis saat servis, kok keluar lapangan (out).</li>
-                        </ul>
+                        <h4 class="font-bold text-blue-800 mb-1">3. Nutrisi & Pemulihan</h4>
+                        <p>Pentingnya hidrasi, asupan karbohidrat yang cukup sebelum latihan berat, serta istirahat/tapering menjelang kompetisi.</p>
                     </div>`,
                 aktivitas: [
-                    { title: "Smash & Defense Drill", desc: "Satu siswa melakukan smash berulang kali, siswa lain melatih pertahanan (defense) dengan mengembalikan bola." },
-                    { title: "Simulasi Game (Set Pendek)", desc: "Bermain ganda/tunggal dengan poin 11. Fokus pada penerapan aturan pindah bola dan hitungan poin." },
-                    { title: "Tugas Wasit & Hakim Garis", desc: "Siswa yang tidak bermain bertugas menjadi wasit (meneriakkan skor) dan hakim garis (menilai in/out)." }
+                    { title: "Long Run 40–60 menit", desc: "Lari jarak menengah-panjang pada intensitas ringan untuk membangun base endurance." },
+                    { title: "Interval 6x800m", desc: "Repetisi 800 m dengan recovery sedang untuk meningkatkan kemampuan VO2max dan toleransi laktat." },
+                    { title: "Fartlek Variasi", desc: "Lari dengan pergantian kecepatan spontan (lari cepat dan ringan) untuk adaptasi kecepatan dan daya tahan." }
                 ],
                 soal: [
-                    "Apa perbedaan utama arah bola pukulan Smash dibandingkan dengan pukulan Drive?",
-                    "Sebutkan 3 contoh kesalahan (fault) yang memberikan poin bagi lawan dalam permainan bulu tangkis!",
-                    "Bagaimana sikap sportivitas yang harus ditunjukkan jika bola lawan jatuh tepat di garis (masuk) namun kamu ragu?"
+                    "Sebutkan tiga prinsip utama dalam menyusun program latihan untuk lari jarak jauh!",
+                    "Mengapa hidrasi dan asupan karbohidrat penting sebelum latihan interval panjang?",
+                    "Bagaimana tanda-tanda overtraining dan apa langkah pencegahannya?"
                 ]
             }
         };
@@ -498,4 +495,3 @@
     </script>
 </body>
 </html>
-
