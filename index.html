@@ -3,284 +3,406 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LKPD & Portofolio PJOK</title>
+    <title>Generator LKPD & Portofolio PJOK</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f1f5f9; 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+        }
+
         .signature-pad {
-            border: 2px dashed #94a3b8;
-            background-color: #ffffff;
             touch-action: none;
             cursor: crosshair;
+            background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2394a3b8' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E");
         }
-        /* Custom Grid untuk kerapian titik dua */
+
+        /* Grid khusus untuk form identitas agar titik dua sejajar rapi */
         .identity-grid {
             display: grid;
-            grid-template-columns: 140px 20px 1fr;
+            grid-template-columns: 140px 10px 1fr;
             align-items: center;
-            row-gap: 1rem;
+            row-gap: 0.75rem;
+        }
+
+        /* Checkbox custom style */
+        .custom-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #334155;
+            border-radius: 4px;
+            cursor: pointer;
+            accent-color: #000;
         }
 
         @media print {
+            @page { margin: 0; size: auto; }
+            body { background: white; padding: 0; margin: 0; }
+            .container { max-width: 100% !important; width: 100% !important; padding: 20px !important; }
             .no-print { display: none !important; }
-            body { background: white; padding: 0; }
-            .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
             .main-card { box-shadow: none !important; border: none !important; border-radius: 0; }
-            textarea, select, input { border: 1px solid #cbd5e1 !important; background: transparent !important; -webkit-appearance: none; }
-            .section-break { page-break-inside: avoid; }
             
-            /* Sembunyikan placeholder saat print */
-            input::placeholder, textarea::placeholder { color: transparent; }
+            /* Form styling for print */
+            input, textarea, select { 
+                border: none !important; 
+                border-bottom: 1px solid #94a3b8 !important; 
+                background: transparent !important; 
+                padding-left: 0 !important;
+                resize: none;
+                -webkit-appearance: none;
+                appearance: none;
+            }
             
-            /* Paksa background color tercetak */
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            /* Hilangkan placeholder saat print */
+            ::placeholder { color: transparent; }
+            
+            /* Page break rules */
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body class="py-8 px-4 min-h-screen relative">
 
-    <!-- TOMBOL AKSES GURU (Floating & Z-Index Tinggi) -->
-    <button onclick="openLoginModal()" id="btn-login" class="fixed top-4 right-4 z-[999] bg-slate-800 text-white px-5 py-3 rounded-full shadow-2xl text-xs font-bold uppercase tracking-wider hover:bg-slate-700 hover:scale-105 transition-all no-print flex items-center gap-2 border-2 border-slate-600 cursor-pointer">
-        🔒 Akses Guru
+    <!-- TOMBOL AKSES GURU -->
+    <button onclick="openLoginModal()" id="btn-login" class="fixed top-4 right-4 z-[50] bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-700 hover:scale-105 transition-all no-print flex items-center gap-2 border border-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        Akses Guru
     </button>
 
-    <!-- MODAL LOGIN (PENGGANTI PROMPT) -->
-    <div id="login-modal" class="hidden fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center no-print backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm border-t-4 border-blue-600">
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Verifikasi Guru</h3>
-            <p class="text-sm text-slate-500 mb-4">Masukkan PIN untuk mengakses panel kontrol.</p>
+    <!-- MODAL LOGIN -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex items-center justify-center no-print backdrop-blur-sm transition-opacity">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs border-t-4 border-blue-600 animate-fade-in-down">
+            <div class="text-center mb-6">
+                <div class="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Verifikasi Guru</h3>
+                <p class="text-xs text-slate-500">Masukkan PIN untuk membuka kontrol.</p>
+            </div>
             
-            <input type="password" id="pin-input" class="w-full border-2 border-slate-300 rounded-lg p-3 text-center text-2xl font-bold tracking-[0.5em] mb-4 focus:border-blue-500 focus:outline-none" maxlength="6" placeholder="******">
+            <input type="password" id="pin-input" class="w-full border-2 border-slate-200 rounded-lg p-2 text-center text-xl font-bold tracking-[0.5em] mb-4 focus:border-blue-500 focus:outline-none transition-colors" maxlength="6" placeholder="******">
             
-            <div class="flex gap-3">
-                <button onclick="closeLoginModal()" class="flex-1 py-2 rounded-lg border border-slate-300 text-slate-600 font-bold hover:bg-slate-50 transition">Batal</button>
-                <button onclick="checkPin()" class="flex-1 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition">Masuk</button>
+            <div class="flex gap-2">
+                <button onclick="closeLoginModal()" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
+                <button onclick="checkPin()" class="flex-1 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-md">Masuk</button>
             </div>
         </div>
     </div>
 
-    <div class="max-w-5xl mx-auto container space-y-6">
+    <div class="max-w-[210mm] mx-auto container space-y-6">
         
-        <!-- CONTROL PANEL (Tersembunyi by default) -->
-        <div id="teacher-panel" class="hidden bg-slate-900 text-white p-5 rounded-xl shadow-xl no-print flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-blue-500 transition-all duration-300">
+        <!-- CONTROL PANEL (GURU) -->
+        <div id="teacher-panel" class="hidden bg-slate-800 text-white p-4 rounded-lg shadow-xl no-print flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-blue-400">
             <div>
-                <h2 class="font-bold text-lg text-blue-400">🎛️ GENERATOR LKPD OTOMATIS</h2>
-                <div class="flex items-center gap-2">
-                    <p class="text-xs text-slate-400">Mode Guru Aktif • Sesuai Modul Ajar (6 JP)</p>
-                    <button onclick="logout()" class="text-[10px] bg-red-600 px-2 py-0.5 rounded hover:bg-red-500">Keluar</button>
-                </div>
+                <h2 class="font-bold text-base text-blue-300 flex items-center gap-2">
+                    <span>🎛️</span> KONTROL MATERI
+                </h2>
+                <p class="text-[10px] text-slate-400 mt-1">Mode Guru Aktif • Pilih Pertemuan untuk update LKPD</p>
             </div>
-            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                <div class="w-full">
-                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Pilih Pertemuan:</label>
-                    <select id="meetingSelector" onchange="loadMeetingData()" class="bg-slate-800 border border-slate-700 text-white text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-pointer hover:bg-slate-700 transition">
-                        <option value="1">Pertemuan 1: Lari Jarak Pendek (Start & Akselerasi)</option>
-                        <option value="2">Pertemuan 2: Lari Jarak Menengah (Strategi Pacing & Transisi)</option>
-                        <option value="3">Pertemuan 3: Lari Jarak Jauh (Endurance & Latihan Interval)</option>
-                    </select>
-                </div>
+            <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                <select id="meetingSelector" onchange="loadMeetingData()" class="bg-slate-700 border border-slate-600 text-white text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2">
+                    <option value="1">Pertemuan 1: Lari Jarak Pendek (Sprint)</option>
+                    <option value="2">Pertemuan 2: Lari Jarak Menengah</option>
+                    <option value="3">Pertemuan 3: Lari Jarak Jauh (Endurance)</option>
+                </select>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2.5 rounded font-bold transition w-full sm:w-auto">
+                    Keluar
+                </button>
             </div>
         </div>
 
-        <!-- AREA DOKUMEN LKPD -->
-        <div class="bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-300 main-card relative min-h-[1000px]">
+        <!-- LEMBAR KERJA (A4 Size) -->
+        <div class="bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-200 main-card relative min-h-[297mm]">
             
-            <!-- Header Dokumen -->
-            <div class="p-8 border-b-2 border-black relative text-center">
-                <!-- Logo Sekolah Placeholder -->
-                <div class="hidden md:block absolute top-6 left-8 w-16 h-16 bg-slate-200 rounded flex items-center justify-center text-xs text-slate-500 font-bold border border-slate-300">LOGO<br>SEKOLAH</div>
+            <!-- HEADER -->
+            <div class="p-8 border-b-2 border-slate-800 relative text-center">
+                <!-- Logo -->
+                <div class="hidden md:flex absolute top-6 left-8 w-16 h-16 bg-white border-2 border-slate-800 rounded items-center justify-center text-[10px] text-slate-800 font-black leading-tight text-center">
+                    LOGO<br>SEKOLAH
+                </div>
                 
-                <h1 class="text-2xl font-black text-black tracking-tight uppercase mb-1">LEMBAR KERJA PESERTA DIDIK (LKPD)<br>& PORTOFOLIO PJOK</h1>
-                <h2 class="text-lg font-bold text-slate-700 uppercase tracking-wider">Pendidikan Jasmani, Olahraga, dan Kesehatan</h2>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight uppercase mb-1">LKPD & PORTOFOLIO SISWA</h1>
+                <h2 class="text-sm font-bold text-slate-600 uppercase tracking-[0.2em] mb-4">Pendidikan Jasmani, Olahraga, dan Kesehatan</h2>
                 
-                <div class="mt-4 flex justify-center gap-4 text-sm font-semibold text-slate-600">
-                    <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Fase E (Kelas X)</span>
-                    <span class="bg-slate-100 px-3 py-1 rounded border border-slate-200">Materi: Atletik (Lari Jarak Pendek, Menengah & Jauh)</span>
+                <div class="inline-flex gap-0 text-xs font-semibold border border-slate-300 rounded overflow-hidden">
+                    <span class="bg-slate-100 text-slate-600 px-4 py-1.5 border-r border-slate-300">Fase E (Kelas X)</span>
+                    <span class="bg-white text-blue-700 px-4 py-1.5 uppercase">Materi Pokok: Lari (Jarak Pendek s.d. Jauh)</span>
                 </div>
             </div>
 
             <div class="p-8 md:p-10 space-y-8">
                 
-                <!-- Identitas & Info Pertemuan (Grid Layout Fixed) -->
-                <div class="flex flex-col md:flex-row justify-between items-start gap-6 border-b-2 border-dashed border-slate-300 pb-6 section-break">
-                    
-                    <!-- Form Identitas dengan Grid Alignment -->
-                    <div class="w-full md:w-2/3 identity-grid">
-                        
-                        <label class="text-sm font-bold text-slate-700 uppercase">Nama Siswa</label>
-                        <div class="text-center font-bold">:</div>
-                        <input type="text" class="w-full border-b border-black outline-none px-2 py-1 bg-transparent focus:bg-blue-50" placeholder="Tulis nama lengkap...">
+                <!-- IDENTITAS OTOMATIS (MODIFIKASI) -->
+                <div class="flex flex-col md:flex-row justify-between items-start gap-8 border-b-2 border-dashed border-slate-300 pb-6 avoid-break">
+                    <div class="w-full md:w-2/3 identity-grid text-sm">
+                        <label class="font-bold text-slate-700 uppercase">Kelas</label>
+                        <div class="font-bold">:</div>
+                        <select id="class-select" onchange="loadStudents()" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-blue-50/50 focus:bg-blue-100 font-semibold cursor-pointer">
+                            <option value="">-- Pilih Kelas --</option>
+                            <option value="X TKJ A">X TKJ A</option>
+                            <option value="X TKJ B">X TKJ B</option>
+                            <option value="X TBSM">X TBSM</option>
+                        </select>
 
-                        <label class="text-sm font-bold text-slate-700 uppercase">Kelas / No. Absen</label>
-                        <div class="text-center font-bold">:</div>
-                        <input type="text" class="w-full border-b border-black outline-none px-2 py-1 bg-transparent focus:bg-blue-50" placeholder="Contoh: X - 1 / 15">
+                        <label class="font-bold text-slate-700 uppercase">Nama Siswa</label>
+                        <div class="font-bold">:</div>
+                        <select id="student-select" onchange="updateAbsen()" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-blue-50/50 focus:bg-blue-100 font-semibold cursor-pointer">
+                            <option value="">-- Pilih Nama Siswa --</option>
+                        </select>
 
-                        <label class="text-sm font-bold text-slate-700 uppercase">Tanggal Praktik</label>
-                        <div class="text-center font-bold">:</div>
-                        <input type="date" id="student-date" class="w-full border-b border-black outline-none px-2 py-1 bg-transparent focus:bg-blue-50 uppercase text-slate-700 cursor-pointer">
-                    
+                        <label class="font-bold text-slate-700 uppercase">No. Absen</label>
+                        <div class="font-bold">:</div>
+                        <input type="text" id="absen-input" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-gray-100 text-slate-500 font-mono" readonly placeholder="Otomatis terisi...">
+
+                        <label class="font-bold text-slate-700 uppercase">Tanggal</label>
+                        <div class="font-bold">:</div>
+                        <input type="date" id="student-date" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-blue-50/50 uppercase text-slate-700 font-mono">
                     </div>
 
-                    <div class="w-full md:w-1/3 bg-slate-50 p-3 border border-slate-200 rounded text-center self-center">
-                        <p class="text-xs text-slate-500 uppercase font-bold mb-1">Topik Pertemuan</p>
-                        <p id="display-meeting-title" class="text-sm font-bold text-blue-700">Pertemuan 1</p>
+                    <div class="w-full md:w-1/3 bg-slate-50 p-4 border border-slate-200 rounded text-center">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Fokus Materi</p>
+                        <p id="display-meeting-title" class="text-sm font-bold text-blue-700 leading-tight">Pertemuan 1</p>
                     </div>
                 </div>
 
-                <!-- I. RINGKASAN MATERI (Bahan Catatan) -->
-                <section class="section-break">
-                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">I. Ringkasan Materi (Bahan Catatan)</h3>
-                    <div id="content-materi" class="bg-slate-50 p-5 rounded border border-slate-200 text-sm text-slate-800 leading-relaxed text-justify">
-                        <!-- Diisi via JS -->
+                <!-- I. RINGKASAN MATERI -->
+                <section class="avoid-break">
+                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2">
+                        <span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">I</span>
+                        Ringkasan Materi (Poin Penting)
+                    </h3>
+                    <div id="content-materi" class="bg-slate-50 p-4 rounded border-l-4 border-slate-300 text-xs text-slate-700 leading-relaxed text-justify space-y-2">
+                        <!-- JS Loads Content Here -->
                     </div>
                 </section>
 
-                <!-- II. PANDUAN AKTIVITAS PRAKTIK (Kartu Tugas) -->
-                <section class="section-break">
-                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">II. Panduan Aktivitas Praktik (Kartu Tugas)</h3>
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-600 italic">Lakukan aktivitas berikut sesuai instruksi guru dan catat hasil/kesulitan yang ditemukan:</p>
-                        <div id="content-aktivitas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Diisi via JS -->
-                        </div>
+                <!-- II. AKTIVITAS PRAKTIK -->
+                <section class="avoid-break">
+                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2">
+                        <span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">II</span>
+                        Kartu Tugas Gerak
+                    </h3>
+                    <p class="text-xs text-slate-500 italic mb-3 ml-8">Lakukan aktivitas berikut dan beri tanda centang jika berhasil:</p>
+                    <div id="content-aktivitas" class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-2 md:pl-8">
+                        <!-- JS Loads Content Here -->
                     </div>
                 </section>
 
-                <!-- III. TUGAS PORTOFOLIO (Refleksi Mandiri) -->
-                <section class="section-break">
-                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">III. Tugas Portofolio (Refleksi Mandiri)</h3>
-                    <div id="content-soal" class="space-y-5">
-                        <!-- Diisi via JS -->
+                <!-- III. REFLEKSI -->
+                <section class="avoid-break">
+                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2">
+                        <span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">III</span>
+                        Refleksi & Pemahaman
+                    </h3>
+                    <div id="content-soal" class="space-y-4 pl-2 md:pl-8">
+                        <!-- JS Loads Content Here -->
                     </div>
                 </section>
 
-                <!-- IV. RUBRIK PENILAIAN MANDIRI (Checklist) -->
-                <section class="section-break">
-                    <h3 class="font-bold text-black mb-3 text-sm uppercase border-l-4 border-black pl-2 tracking-wide">IV. Rubrik Penilaian Mandiri (Checklist)</h3>
-                    <div class="border border-black rounded-sm overflow-hidden">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-200 text-black border-b border-black text-xs font-bold uppercase">
+                <!-- IV. SIKAP (CHECKLIST) -->
+                <section class="avoid-break">
+                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2">
+                        <span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">IV</span>
+                        Penilaian Sikap (Profil Pelajar Pancasila)
+                    </h3>
+                    <div class="pl-0 md:pl-8">
+                        <table class="w-full text-xs border border-slate-300">
+                            <thead class="bg-slate-100 font-bold uppercase text-slate-700">
                                 <tr>
-                                    <th class="p-2 border-r border-black w-8 text-center">No</th>
-                                    <th class="p-2 border-r border-black text-left">Pernyataan (Profil Pelajar Pancasila)</th>
-                                    <th class="p-2 w-20 text-center border-r border-black">Ya</th>
-                                    <th class="p-2 w-20 text-center">Tidak</th>
+                                    <th class="p-2 border border-slate-300 w-8">No</th>
+                                    <th class="p-2 border border-slate-300 text-left">Indikator Perilaku</th>
+                                    <th class="p-2 border border-slate-300 w-12 text-center">Ya</th>
+                                    <th class="p-2 border border-slate-300 w-12 text-center">Tdk</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-black text-slate-800">
+                            <tbody class="text-slate-800">
                                 <tr>
-                                    <td class="p-2 text-center border-r border-black font-semibold">1</td>
-                                    <td class="p-2 border-r border-black">
-                                        <strong>Mandiri:</strong> Saya mempersiapkan pakaian/sepatu olahraga dan melakukan pemanasan dengan sungguh-sungguh tanpa disuruh.
+                                    <td class="p-2 border border-slate-300 text-center font-bold">1</td>
+                                    <td class="p-2 border border-slate-300">
+                                        <strong>Beriman & Bertakwa:</strong> Menjaga sopan santun dan tidak berkata kasar saat merasa lelah atau emosi.
                                     </td>
-                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
-                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                </tr>
+                                <tr class="bg-slate-50">
+                                    <td class="p-2 border border-slate-300 text-center font-bold">2</td>
+                                    <td class="p-2 border border-slate-300">
+                                        <strong>Mandiri:</strong> Tidak banyak mengeluh dan berusaha menyelesaikan tugas lari sesuai kemampuan sendiri.
+                                    </td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
                                 </tr>
                                 <tr>
-                                    <td class="p-2 text-center border-r border-black font-semibold">2</td>
-                                    <td class="p-2 border-r border-black">
-                                        <strong>Gotong Royong:</strong> Saya membantu teman yang kesulitan melakukan teknik lari dan merapikan perlengkapan latihan setelah selesai.
+                                    <td class="p-2 border border-slate-300 text-center font-bold">3</td>
+                                    <td class="p-2 border border-slate-300">
+                                        <strong>Gotong Royong:</strong> Memberi semangat (support) kepada teman yang tertinggal atau kesulitan saat lari.
                                     </td>
-                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
-                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                </tr>
+                                <tr class="bg-slate-50">
+                                    <td class="p-2 border border-slate-300 text-center font-bold">4</td>
+                                    <td class="p-2 border border-slate-300">
+                                        <strong>Bernalar Kritis:</strong> Berani bertanya jika belum paham teknik atau mampu menjawab pertanyaan guru.
+                                    </td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
                                 </tr>
                                 <tr>
-                                    <td class="p-2 text-center border-r border-black font-semibold">3</td>
-                                    <td class="p-2 border-r border-black">
-                                        <strong>Bernalar Kritis:</strong> Saya mampu menjelaskan letak kesalahan saya sendiri saat start atau saat fase lari jika tidak optimal.
+                                    <td class="p-2 border border-slate-300 text-center font-bold">5</td>
+                                    <td class="p-2 border border-slate-300">
+                                        <strong>Kreatif:</strong> Mencari solusi sederhana saat latihan (misal: mengatur napas sendiri agar tidak cepat capek).
                                     </td>
-                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
-                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2 text-center border-r border-black font-semibold">4</td>
-                                    <td class="p-2 border-r border-black">
-                                        <strong>Tanggung Jawab:</strong> Saya datang tepat waktu dan mengikuti instruksi keselamatan selama latihan.
-                                    </td>
-                                    <td class="p-2 text-center border-r border-black"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
-                                    <td class="p-2 text-center"><input type="checkbox" class="w-4 h-4 accent-black cursor-pointer"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
+                                    <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- V. HASIL BELAJAR (NILAI & TTD) -->
-                <section class="pt-6 mt-6 border-t-2 border-black flex flex-col md:flex-row justify-between gap-8 section-break">
+                <!-- V. VALIDASI -->
+                <section class="mt-8 pt-4 border-t-2 border-slate-800 flex flex-col md:flex-row justify-between gap-6 avoid-break">
                     
-                    <!-- Area Penilaian Guru -->
-                    <div class="flex-1 border border-slate-300 bg-slate-50 p-4 rounded relative">
-                        <div class="absolute -top-3 left-3 bg-slate-50 px-2 text-xs font-bold text-slate-500 uppercase">Verifikasi Guru</div>
+                    <!-- Form Nilai -->
+                    <div class="flex-1 bg-blue-50 border border-blue-200 p-4 rounded relative">
+                        <div class="absolute -top-3 left-3 bg-blue-600 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded">Diisi Guru</div>
                         
-                        <div class="flex items-center justify-between gap-4 mb-4">
+                        <div class="flex gap-4 mb-3 mt-1">
                             <div class="w-1/2">
-                                <label class="font-bold text-xs text-slate-700 block mb-1">Predikat:</label>
-                                <select class="w-full border border-slate-400 rounded px-2 py-1 text-sm font-bold bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Predikat</label>
+                                <select class="w-full border border-blue-300 rounded px-2 py-1 text-sm font-bold bg-white text-slate-800">
                                     <option value="">- Pilih -</option>
-                                    <option value="A">A (Sangat Baik)</option>
-                                    <option value="B">B (Baik)</option>
-                                    <option value="C">C (Cukup)</option>
-                                    <option value="D">D (Perlu Bimbingan)</option>
+                                    <option value="A">Sangat Baik</option>
+                                    <option value="B">Baik</option>
+                                    <option value="C">Cukup</option>
+                                    <option value="D">Kurang</option>
                                 </select>
                             </div>
                             <div class="w-1/2">
-                                <label class="font-bold text-xs text-slate-700 block mb-1">Nilai Angka (0-100):</label>
-                                <input type="number" min="0" max="100" class="w-full border border-slate-400 rounded px-2 py-1 text-sm font-bold bg-white focus:ring-2 focus:ring-blue-500 outline-none text-center" placeholder="0">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Nilai (0-100)</label>
+                                <input type="number" class="w-full border border-blue-300 rounded px-2 py-1 text-sm font-bold bg-white text-center">
                             </div>
                         </div>
-                        
-                        <div class="space-y-1">
-                            <label class="font-bold text-sm text-slate-700">Catatan/Umpan Balik:</label>
-                            <textarea class="w-full bg-white border border-slate-300 rounded p-2 text-sm h-20 outline-none resize-none focus:border-blue-500" placeholder="Berikan catatan evaluasi teknik..."></textarea>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Catatan Evaluasi</label>
+                            <textarea id="eval-note" class="w-full bg-white border border-blue-300 rounded p-2 text-xs h-12 resize-none" placeholder="Tulis catatan..."></textarea>
                         </div>
                     </div>
-                    
-                    <!-- Area Tanda Tangan -->
-                    <div class="flex gap-4">
-                        <div class="text-center">
-                            <p class="text-xs font-bold text-slate-500 uppercase mb-2">Siswa</p>
-                            <canvas id="sig-siswa" class="signature-pad w-32 h-20 bg-white rounded border border-slate-300"></canvas>
-                            <button onclick="clearSig('sig-siswa')" class="no-print text-[10px] text-red-500 font-bold mt-1 hover:underline">Hapus</button>
+
+                    <!-- Tanda Tangan -->
+                    <div class="flex gap-4 justify-end">
+                        <div class="text-center w-32">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Siswa</p>
+                            <canvas id="sig-siswa" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors"></canvas>
+                            <button onclick="clearSig('sig-siswa')" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button>
                         </div>
-                        <div class="text-center">
-                            <p class="text-xs font-bold text-slate-500 uppercase mb-2">Guru PJOK</p>
-                            <canvas id="sig-guru" class="signature-pad w-32 h-20 bg-white rounded border border-slate-300"></canvas>
-                            <p class="text-xs font-bold mt-1">M. Nanda S.N., S.Kom.</p>
-                            <button onclick="clearSig('sig-guru')" class="no-print text-[10px] text-red-500 font-bold mt-1 hover:underline">Hapus</button>
+                        <div class="text-center w-32">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Guru Mapel</p>
+                            <canvas id="sig-guru" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors"></canvas>
+                            <p class="text-[10px] font-bold mt-1 text-slate-800">M. Nanda S.N., S.Kom.</p>
+                            <button onclick="clearSig('sig-guru')" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Tombol Print -->
-                <div class="no-print pt-4 pb-12">
-                    <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded shadow-lg flex items-center justify-center gap-2 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- FOOTER -->
+                <div class="no-print pt-6 pb-20">
+                    <button onclick="window.print()" class="w-full bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-4 rounded-lg shadow-lg flex items-center justify-center gap-3 transition-all transform hover:-translate-y-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 012-2H5a2 2 0 012 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
-                        SIMPAN PDF (CETAK)
+                        CETAK KE PDF / PRINT
                     </button>
-                    <p class="text-center text-xs text-slate-400 mt-2">Tips: Atur skala printer ke "Default" atau "100%" agar pas di A4.</p>
+                    <p class="text-center text-xs text-slate-400 mt-3">Gunakan kertas A4 dan atur skala ke "Default" pada pengaturan printer.</p>
                 </div>
 
             </div>
         </div>
-        <p class="text-center text-slate-400 text-[10px] mt-6 mb-10 tracking-widest uppercase">&copy; 2026 Modul Ajar PJOK Fase E</p>
+        <p class="text-center text-slate-400 text-[10px] mt-4 mb-8 no-print">&copy; 2026 Platform Merdeka Mengajar - Modul PJOK</p>
     </div>
 
     <script>
-        // === LOGIKA AKSES GURU (MODAL SYSTEM) ===
-        const TEACHER_PIN = "270302";
+        // === DATABASE SISWA ===
+        const studentData = {
+            "X TKJ A": [
+                "ALDO BARETO", "DARMA YANTI", "DIRLY REVA RADITYA", "FAIZ FATAH HILLAH", 
+                "FIRMANSYAH ARDIANTO", "GEDE ARYA DEVA NANDA", "I GEDE JAYA SATRIA", 
+                "IDA AYU PUTU GITA NIRAWATI", "KOMANG RENDI KAJENG PRATAMA", "LUTVIA ANAS TASYA", 
+                "MADE AYU BUDIATI", "MUHAMAD LABIB MIRZA", "NABILA NUR HAFIFAH", 
+                "NI KETUT DESTA LESTARI", "RAFLY MEY WILIAN", "RIFAI ARYA MAULANA", 
+                "SEVA WISNU RAMADHAN", "SHEILLA NIKI DESTIANI", "TYAN FAJAR PRASETYO", "ZIVARA APRILIA"
+            ],
+            "X TKJ B": [
+                "ANISA", "CLARA SALSABILA", "FEBRIAN RIZKI VALENTINO", "GUSTI AYU KOMANG VYA KARTINI", 
+                "I KOMANG ARNAWAN WIGUNA", "I MADE GILANG PURNAJAYA", "I WAYAN TEGAR WALOYO", 
+                "IDA AYU SINDI SINTYAWATI", "KOMANG RAFA DINATA", "KOMANG REDITE", "MADE EDI PURWATE", 
+                "NI KADEK ARTIKA CHANDRA DEWI", "NI LUH MERY ARYAWATI", "NYOMAN TRI APSARI WIDIA", 
+                "PANDE KETUT BAGAS KARA", "PUTU FITRI YANI", "REHAN OGI DWI PRANATA", 
+                "RIZELENEY APRILIA", "SYIFA ADELIA CAHYANI", "WAYAN SUDIARTE"
+            ],
+            "X TBSM": [
+                "ABBEL DANU VIAN", "AHMAD FAHRI MUSTOFA", "ALDI MIFTAKHUL JINAN", "ALDO VIRMANSYAH", 
+                "ARYA AL FAIS", "DENIS LUTVI AZIZ", "DEWA GEDE WISNU SATRIAWAN", "EDO JAYA PRATAMA", 
+                "EXSAN BAYU NUGEROHO", "FADLI ILHAM ABDILLAH", "FILLPUS AL FINO", 
+                "I DEWA GEDE ADITYA SAPUTRA", "MUHAMAD ALDO SAPUTRA", "MUHAMMAD FAJRI KATAMI", 
+                "MUSTOFA", "NANDA WIJAYA", "RADIT PRASTYO", "RAYHAN PRATAMA", "REFAN ALDIANO", 
+                "RENDY SETIAWAN", "RENO AVIAN", "REZA PRASTOMI", "RISJAYA PRATAMA", 
+                "YUSUF APRIL ERLANGGA", "WAYAN ANDIKA"
+            ]
+        };
+
+        // Fungsi Load Siswa berdasarkan Kelas
+        function loadStudents() {
+            const classSelect = document.getElementById('class-select');
+            const studentSelect = document.getElementById('student-select');
+            const selectedClass = classSelect.value;
+            
+            // Reset dropdown siswa
+            studentSelect.innerHTML = '<option value="">-- Pilih Nama Siswa --</option>';
+            document.getElementById('absen-input').value = "";
+
+            if (selectedClass && studentData[selectedClass]) {
+                studentData[selectedClass].forEach((name, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1; // Menyimpan nomor absen sebagai value
+                    option.text = name;
+                    studentSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Fungsi Update No Absen otomatis
+        function updateAbsen() {
+            const studentSelect = document.getElementById('student-select');
+            const absenInput = document.getElementById('absen-input');
+            
+            if (studentSelect.value) {
+                absenInput.value = studentSelect.value; // Value option adalah index+1 (no absen)
+            } else {
+                absenInput.value = "";
+            }
+        }
+
+        // === LOGIKA AKSES GURU ===
+        const TEACHER_PIN = "270302"; // PIN GURU
 
         function openLoginModal() {
             document.getElementById('login-modal').classList.remove('hidden');
-            document.getElementById('pin-input').focus();
+            document.getElementById('pin-input').value = "";
+            setTimeout(() => document.getElementById('pin-input').focus(), 100);
         }
 
         function closeLoginModal() {
             document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('pin-input').value = "";
         }
 
         function checkPin() {
@@ -293,10 +415,10 @@
                 panel.classList.remove('hidden');
                 btn.classList.add('hidden'); 
                 
-                // Animasi kecil
-                panel.scrollIntoView({ behavior: 'smooth' });
+                // Scroll to top smoothly
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
-                alert("PIN Salah! Akses ditolak.");
+                alert("PIN Salah! Coba lagi.");
                 document.getElementById('pin-input').value = "";
             }
         }
@@ -304,153 +426,161 @@
         function logout() {
             document.getElementById('teacher-panel').classList.add('hidden');
             document.getElementById('btn-login').classList.remove('hidden');
-            document.getElementById('meetingSelector').value = "1"; // Reset ke pertemuan 1
+            document.getElementById('meetingSelector').value = "1";
             loadMeetingData();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Support Enter key di PIN Input
         document.getElementById('pin-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                checkPin();
-            }
+            if (e.key === 'Enter') checkPin();
         });
 
-        // === DATA SESUAI RPP (ATLETIK) ===
+        // === DATA RPP / MODUL AJAR (Bahasa Akademis - SMK Kelas 10) ===
         const rppData = {
             1: {
-                title: "Pertemuan 1: Lari Jarak Pendek (Start & Akselerasi)",
+                title: "Pertemuan 1: Lari Jarak Pendek (Sprint)",
                 materi: `
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">1. Pengantar Lari Jarak Pendek</h4>
-                        <p class="mb-2">Lari jarak pendek umumnya mencakup nomor 60m, 100m, 200m, dan 400m. Fokus utama adalah reaksi start, akselerasi, kecepatan maksimal, dan teknik berlari efisien.</p>
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Organisasi</strong>
+                        <p class="mb-2">Atletik disebut sebagai <em>"Mother of Sports"</em> (Induk Cabang Olahraga) karena menjadi fondasi gerakan dasar seperti lari, lompat, dan lempar. Induk organisasi internasionalnya adalah <strong>World Athletics</strong>, sedangkan di Indonesia adalah <strong>PASI</strong> (Persatuan Atletik Seluruh Indonesia).</p>
                     </div>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">2. Teknik Start</h4>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <li>Posisi start (set) pada blok start: berat badan condong ke depan pada fase drive.</li>
-                            <li>Reaksi cepat terhadap bunyi start; tangan dan kaki bekerja serentak untuk mendorong ke depan.</li>
-                            <li>Fase drive (0–20 m): tubuh condong, langkah pendek dan cepat, kemudian naik ke posisi berlari tegak.</li>
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Teknik Start Jongkok (Crouch Start)</strong>
+                        <p class="mb-2">Teknik start yang efektif menggunakan tumpuan yang kuat untuk menghasilkan dorongan maksimal.</p>
+                        <ul class="list-disc ml-4 space-y-1 mt-1">
+                            <li><strong>"Bersedia":</strong> Posisi jongkok, tangan membentuk huruf V terbalik di belakang garis start. Lutut kaki belakang menyentuh permukaan lintasan.</li>
+                            <li><strong>"Siap":</strong> Angkat <strong>panggul</strong> sedikit lebih tinggi dari bahu. Pindahkan pusat berat badan ke depan (bertumpu pada lengan) untuk persiapan tolakan.</li>
+                            <li><strong>"Ya":</strong> Lakukan <strong>tolakan eksplosif</strong> kaki belakang pada tumpuan agar tubuh meluncur cepat ke depan dengan sudut kemiringan yang tepat.</li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-blue-800 mb-1">3. Akselerasi & Teknik Berlari</h4>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <li>Pertahankan frekuensi langkah tinggi saat akselerasi, lalu perbaiki panjang langkah saat mencapai kecepatan maksimal.</li>
-                            <li>Pola ayunan lengan membantu keseimbangan dan momentum; siku sekitar 90 derajat.</li>
-                            <li>Pernafasan rileks, kepala netral, pandangan ke depan.</li>
-                        </ul>
+                    <div class="mb-4">
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Biomekanika Lari Sprint</strong>
+                        <p>Saat melakukan sprint, tubuh condong ke depan (body lean). Tumpuan kaki menggunakan <strong>ujung telapak kaki (forefoot)</strong> untuk meminimalkan waktu kontak dengan tanah dan memaksimalkan dorongan. Ayunan lengan siku ditekuk 90 derajat secara kuat.</p>
                     </div>`,
                 aktivitas: [
-                    { title: "Drill Start dari Blok / Posisi Set", desc: "Latihan start 10–20 m dari blok atau posisi set, fokus reaksi dan drive phase. Lakukan 6 percobaan." },
-                    { title: "Akselerasi 30 m", desc: "Dari posisi berdiri, sprint 30 m dengan fokus akselerasi; catat waktu setiap percobaan." },
-                    { title: "Relay Pendek (Passing Cepat)", desc: "Latihan bergantian sprint 50 m sebagai latihan pergantian kecepatan dan kerjasama tim." }
+                    { title: "Praktik Posisi Tangan", desc: "Melatih posisi tangan V-terbalik di garis start. Memastikan jari-jari kokoh menopang beban tubuh untuk stabilitas." },
+                    { title: "Latihan Reaksi (Reaction Drill)", desc: "Berdiri membelakangi instruktur. Saat mendengar sinyal suara, segera berbalik dan melakukan akselerasi 5-10 meter." },
+                    { title: "Sprint 30 Meter", desc: "Melakukan lari 30 meter. Fokus pada transisi posisi tubuh dari condong (fase akselerasi) ke posisi lari tegak." },
+                    { title: "Teknik Memasuki Garis Finish", desc: "Berlari melewati garis finish dengan membusungkan dada (The Dip) tanpa mengurangi kecepatan secara tiba-tiba." }
                 ],
                 soal: [
-                    "Jelaskan tiga poin penting yang harus diperhatikan saat melakukan start (set) dari blok!",
-                    "Mengapa fase drive (awal akselerasi) penting dalam lari jarak pendek? Apa akibatnya jika langsung tegak?",
-                    "Sebutkan satu kendala utama yang kamu rasakan saat melakukan akselerasi dan bagaimana cara memperbaikinya!"
-                ]
+                    "Apa yang paling sulit kamu rasakan saat melakukan start jongkok tadi? Apakah kakimu terasa licin atau kuat menolak?",
+                    "Saat lari kencang tadi, apakah kamu lari jinjit (ujung kaki) atau telapak rata? Mana yang menurutmu membuat larimu lebih cepat?",
+                    "Saat aba-aba 'Siap' (panggul naik), apakah tanganmu terasa gemetar menahan berat badan? Ceritakan apa yang kamu rasakan di lenganmu!"
+                ],
+                evaluasi: "Siswa telah mempraktikkan start jongkok dengan baik. Fokus evaluasi pada posisi panggul saat aba-aba 'Siap' dan kekuatan tolakan kaki. Respon terhadap aba-aba start cukup responsif."
             },
             2: {
-                title: "Pertemuan 2: Lari Jarak Menengah (Strategi Pacing & Transisi)",
+                title: "Pertemuan 2: Lari Jarak Menengah (800m - 1500m)",
                 materi: `
-                    <p class="mb-3 font-semibold italic text-slate-600">Lari jarak menengah biasanya mencakup nomor 800 m hingga 1500 m, menggabungkan kecepatan dan daya tahan.</p>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">1. Karakteristik Lari Menengah</h4>
-                        <p class="mb-1"><strong>Definisi:</strong> Nomor yang memerlukan keseimbangan antara anaerob dan aerob; penting mengatur pacing.</p>
-                        <p><strong>Tujuan:</strong> Mempertahankan kecepatan optimal dengan efisien dan memanfaatkan transisi antara fase akselerasi dan kecepatan kompetitif.</p>
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Karakteristik Lari Menengah</strong>
+                        <p class="mb-2">Nomor lari 800m dan 1500m memiliki sejarah panjang sejak Olimpiade Kuno. Nomor ini unik karena menuntut perpaduan dua aspek fisik utama: <strong>Kecepatan</strong> (seperti sprinter) dan <strong>Daya Tahan</strong> (seperti pelari maraton). Pelari harus cerdas menghemat tenaga (efisiensi) di awal, namun memiliki sisa tenaga untuk sprint di akhir.</p>
                     </div>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">2. Strategi Pacing</h4>
-                        <p class="mb-1"><strong>Teknik:</strong> Membagi energi (lap per lap) sehingga tidak terjadi kelelahan dini; negative split sering efektif.</p>
-                        <p><strong>Pernafasan & Ritme:</strong> Sinkronkan langkah dan napas untuk efisiensi.</p>
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Analisis Teknik & Posisi Tubuh</strong>
+                        <p class="mb-2">Berbeda dengan sprinter yang membungkuk, pelari jarak menengah menggunakan <strong>Start Berdiri (Standing Start)</strong> dengan posisi tubuh lebih tegak (sekitar 80-85 derajat). Posisi tegak ini penting untuk membuka rongga dada agar asupan oksigen ke paru-paru lebih maksimal selama berlari.</p>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-blue-800 mb-1">3. Transisi & Finishing</h4>
-                        <p class="mb-1"><strong>Kunci:</strong> Meningkatkan laju menuju akhir lomba (kick) dengan mempertahankan teknik; timing serangan akhir penting.</p>
+                    <div class="mb-4">
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Strategi Lomba (Taktik)</strong>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li><strong>Pacing (Pengaturan Irama):</strong> Menjaga kecepatan tetap stabil (konstan) di setiap putaran agar tidak kelelahan dini.</li>
+                            <li><strong>Positioning:</strong> Menjaga posisi agar tidak terkurung lawan, terutama saat memasuki tikungan.</li>
+                            <li><strong>Kick:</strong> Kemampuan melakukan akselerasi maksimal di 100-200 meter terakhir menjelang finish.</li>
+                        </ul>
                     </div>`,
                 aktivitas: [
-                    { title: "Interval 4x400m (Pacing)", desc: "Lakukan 4 repetisi 400 m dengan recovery singkat; fokus stabilitas tempo dan transisi di tiap putaran." },
-                    { title: "Tempo Run 20 menit", desc: "Lari pada kecepatan sedikit di bawah race pace untuk meningkatkan ambang laktat." },
-                    { title: "Latihan Negative Split", desc: "Lari 800 m dengan membagi kecepatan agar bagian kedua lebih cepat dari bagian pertama." }
+                    { title: "Simulasi Start Berdiri", desc: "Mempraktikkan posisi kaki (satu depan, satu belakang) dengan lutut sedikit ditekuk dan badan condong." },
+                    { title: "Teknik Pendaratan (Midfoot)", desc: "Jogging ritmis dengan fokus pendaratan kaki rata. Membandingkan efisiensinya dengan teknik jinjit." },
+                    { title: "Latihan Pacing", desc: "Berlari dengan target waktu putaran yang konsisten (misal: 2 menit per putaran) untuk melatih 'feeling' irama." },
+                    { title: "Manajemen Pernapasan", desc: "Berlari dengan pola napas ritmis 2:2 (2 langkah inhalasi, 2 langkah ekshalasi)." }
                 ],
                 soal: [
-                    "Jelaskan perbedaan strategi pacing antara lari 800 m dan 1500 m!",
-                    "Apa manfaat melakukan negative split dalam latihan jarak menengah?",
-                    "Kapan saat yang tepat untuk melakukan 'kick' (peningkatan kecepatan) dalam lomba 800 m?"
-                ]
+                    "Apa bedanya rasa capek saat lari sprint (Pertemuan 1) dengan lari keliling lapangan hari ini? Mana yang lebih bikin napasmu 'ngos-ngosan'?",
+                    "Apakah perutmu terasa sakit (suduk) atau napasmu sesak saat berlari tadi? Jika iya, apa yang kamu lakukan biar enakan?",
+                    "Coba bayangkan jika kamu lari secepat kilat (sprint) di awal start tadi, kira-kira apa yang akan terjadi pada kakimu di putaran terakhir? Masih kuat atau lemas?"
+                ],
+                evaluasi: "Siswa mampu menerapkan teknik start berdiri yang efisien. Perlu peningkatan pada konsistensi irama lari (pacing) dan pengaturan napas agar tidak cepat lelah di putaran awal."
             },
             3: {
-                title: "Pertemuan 3: Lari Jarak Jauh (Endurance & Latihan Interval)",
+                title: "Pertemuan 3: Lari Jarak Jauh (Endurance)",
                 materi: `
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">1. Karakteristik Lari Jarak Jauh</h4>
-                        <p>Lari jauh mencakup nomor 3000 m ke atas, cross-country, atau jalan lintas alam. Fokus pada daya tahan aerob, ekonomi gerak, dan manajemen energi.</p>
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Filosofi Marathon</strong>
+                        <p>Lari jarak jauh memiliki akar sejarah dari legenda Marathon (Yunani Kuno). Ini merupakan uji ketahanan fisik dan mental manusia yang ekstrem.</p>
+                        <div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded mb-2">
+                            <p><strong>Fartlek (Speed Play):</strong> Metode latihan variasi kecepatan (lari, jogging, jalan) di medan alami.</p>
+                            <p><strong>Personal Best (PB):</strong> Catatan waktu terbaik pribadi yang menjadi tolok ukur kemajuan atlet.</p>
+                        </div>
                     </div>
                     <div class="mb-4">
-                        <h4 class="font-bold text-blue-800 mb-1">2. Latihan Endurance</h4>
-                        <p><strong>Metode:</strong> Long run, fartlek, latihan ambang (threshold) dan interval panjang untuk meningkatkan kapasitas aerob.</p>
-                        <p><strong>Pola:</strong> Volume mingguan dan periodisasi penting untuk menghindari overtraining.</p>
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Konsep Daya Tahan (Endurance)</strong>
+                        <p>Kunci lari jarak jauh adalah efisiensi energi. Ayunan lengan rendah dan rileks. Frekuensi langkah (cadence) dijaga stabil untuk menghemat konsumsi oksigen.</p>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-blue-800 mb-1">3. Nutrisi & Pemulihan</h4>
-                        <p>Pentingnya hidrasi, asupan karbohidrat yang cukup sebelum latihan berat, serta istirahat/tapering menjelang kompetisi.</p>
+                    <div class="mb-4">
+                        <strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Fenomena Kelelahan</strong>
+                        <p>Pelari jarak jauh sering menghadapi fase <em>"Hitting the Wall"</em>, yaitu kondisi kehabisan cadangan glikogen otot secara drastis. Diperlukan strategi mental dan hidrasi yang tepat untuk mengatasinya.</p>
                     </div>`,
                 aktivitas: [
-                    { title: "Long Run 40–60 menit", desc: "Lari jarak menengah-panjang pada intensitas ringan untuk membangun base endurance." },
-                    { title: "Interval 6x800m", desc: "Repetisi 800 m dengan recovery sedang untuk meningkatkan kemampuan VO2max dan toleransi laktat." },
-                    { title: "Fartlek Variasi", desc: "Lari dengan pergantian kecepatan spontan (lari cepat dan ringan) untuk adaptasi kecepatan dan daya tahan." }
+                    { title: "Latihan Fartlek", desc: "Berlari durasi 15 menit dengan variasi intensitas: Sprint, Jogging, dan Jalan secara bergantian." },
+                    { title: "Uji Daya Tahan (Tes Cooper)", desc: "Berlari sejauh mungkin dalam waktu 12 menit untuk mengukur kapasitas aerobik (VO2 Max)." },
+                    { title: "Pemulihan Denyut Nadi", desc: "Mengukur denyut nadi pemulihan (recovery heart rate) untuk menilai tingkat kebugaran jantung." },
+                    { title: "Pendinginan (Cooling Down)", desc: "Melakukan peregangan statis pada otot tungkai untuk mencegah kram otot." }
                 ],
                 soal: [
-                    "Sebutkan tiga prinsip utama dalam menyusun program latihan untuk lari jarak jauh!",
-                    "Mengapa hidrasi dan asupan karbohidrat penting sebelum latihan interval panjang?",
-                    "Bagaimana tanda-tanda overtraining dan apa langkah pencegahannya?"
-                ]
+                    "Bagian tubuh mana yang paling pegal saat lari jarak jauh tadi? Kaki, napas, atau pundak? Ceritakan rasanya!",
+                    "Apa yang kamu pikirkan saat merasa sangat capek tapi harus tetap lari? Kalimat apa yang kamu ucapkan dalam hati biar semangat lagi?",
+                    "Mana yang lebih asik menurutmu: Lari terus-menerus dengan kecepatan sama, atau lari Fartlek (lari-jalan-lari) yang berubah-ubah? Kenapa?"
+                ],
+                evaluasi: "Evaluasi fokus pada daya tahan kardiovaskular siswa. Semangat dan mental juang dalam menyelesaikan sesi lari jarak jauh/fartlek menjadi poin penilaian utama."
             }
         };
 
-        // FUNGSI GANTI KONTEN
+        // === FUNGSI LOAD KONTEN ===
         function loadMeetingData() {
             const id = document.getElementById('meetingSelector').value;
             const data = rppData[id];
 
-            // 1. Update Judul
+            // Update Header Topik
             document.getElementById('display-meeting-title').innerText = data.title;
             
-            // 2. Update Materi
+            // Update Materi
             document.getElementById('content-materi').innerHTML = data.materi;
 
-            // 3. Update Aktivitas
+            // Update Aktivitas
             const actContainer = document.getElementById('content-aktivitas');
             actContainer.innerHTML = '';
             data.aktivitas.forEach((act, idx) => {
                 actContainer.innerHTML += `
-                    <div class="bg-white border border-slate-200 p-3 rounded shadow-sm">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded">${idx + 1}</span>
-                            <h4 class="font-bold text-sm text-slate-800">${act.title}</h4>
+                    <div class="bg-white border border-slate-200 p-3 rounded shadow-sm flex items-start gap-3">
+                        <input type="checkbox" class="mt-1 custom-checkbox shrink-0">
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-800">${act.title}</h4>
+                            <p class="text-[10px] text-slate-500 leading-tight mt-0.5">${act.desc}</p>
                         </div>
-                        <p class="text-xs text-slate-600 ml-6 leading-relaxed">${act.desc}</p>
                     </div>
                 `;
             });
 
-            // 4. Update Soal
+            // Update Soal Refleksi
             const soalContainer = document.getElementById('content-soal');
             soalContainer.innerHTML = '';
             data.soal.forEach((soal, idx) => {
                 soalContainer.innerHTML += `
-                    <div class="bg-white p-4 border border-slate-200 rounded relative">
-                        <span class="absolute top-4 left-4 font-bold text-sm text-slate-800">${idx + 1}.</span>
-                        <label class="font-bold text-sm text-slate-800 block mb-2 pl-6">${soal}</label>
-                        <textarea class="w-full border-b border-dashed border-slate-300 bg-transparent outline-none text-sm p-1 focus:border-blue-500 transition-colors pl-6" rows="3" placeholder="Jawab di sini..."></textarea>
+                    <div class="relative">
+                        <label class="font-bold text-xs text-slate-800 block mb-1">${idx + 1}. ${soal}</label>
+                        <textarea class="w-full border-b border-dashed border-slate-300 bg-transparent outline-none text-xs py-1 focus:bg-blue-50 transition-colors resize-none overflow-hidden" rows="2" placeholder="Jawaban: ................................................................................."></textarea>
                     </div>
                 `;
             });
+
+            // Update Evaluasi Guru (Otomatis)
+            const evalNote = document.getElementById('eval-note');
+            if (evalNote) {
+                evalNote.value = data.evaluasi || "";
+            }
         }
 
-        // TANGGAL & CANVAS LOGIC
+        // === LOGIKA TANGGAL & TANDA TANGAN ===
         document.getElementById('student-date').valueAsDate = new Date();
 
         function setupSig(id) {
@@ -458,40 +588,91 @@
             const ctx = canvas.getContext('2d');
             let drawing = false;
 
-            function resize() {
+            // Setup resolusi tinggi untuk layar retina/HP
+            function resizeCanvas() {
                 const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                // Simpan konten saat ini (jika ada) - opsional, di sini kita reset jika resize drastis
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
                 ctx.scale(ratio, ratio);
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#000';
             }
-            window.addEventListener("resize", resize);
-            resize();
+            
+            // Panggil resize saat awal
+            setTimeout(resizeCanvas, 100);
 
-            const getPos = (e) => {
+            // Fungsi mendapatkan posisi kursor/sentuhan relative terhadap canvas
+            function getPos(e) {
                 const rect = canvas.getBoundingClientRect();
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+
                 return {
-                    x: (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left,
-                    y: (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
                 };
-            };
+            }
 
-            const start = (e) => { drawing = true; ctx.beginPath(); const pos = getPos(e); ctx.moveTo(pos.x, pos.y); if(e.cancelable) e.preventDefault(); };
-            const move = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = 'black'; ctx.lineTo(pos.x, pos.y); ctx.stroke(); if(e.cancelable) e.preventDefault(); };
-            const end = () => drawing = false;
+            function start(e) {
+                drawing = true;
+                ctx.beginPath();
+                const pos = getPos(e);
+                ctx.moveTo(pos.x, pos.y);
+                // Prevent scrolling saat menyentuh canvas
+                if(e.type === 'touchstart') e.preventDefault();
+            }
 
-            canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); window.addEventListener('mouseup', end);
-            canvas.addEventListener('touchstart', start, {passive: false}); canvas.addEventListener('touchmove', move, {passive: false}); canvas.addEventListener('touchend', end);
+            function move(e) {
+                if (!drawing) return;
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                if(e.type === 'touchmove') e.preventDefault();
+            }
+
+            function end() {
+                drawing = false;
+            }
+
+            // Event Listeners Mouse
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', move);
+            canvas.addEventListener('mouseup', end);
+            canvas.addEventListener('mouseleave', end);
+
+            // Event Listeners Touch (HP/Tablet)
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', move, { passive: false });
+            canvas.addEventListener('touchend', end);
         }
 
         function clearSig(id) {
             const canvas = document.getElementById(id);
             const ctx = canvas.getContext('2d');
+            
+            // Clear dengan mempertimbangkan transformasi scale
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            
+            ctx.beginPath();
         }
 
-        setupSig('sig-siswa');
-        setupSig('sig-guru');
-        loadMeetingData(); // Init load
+        // Inisialisasi
+        window.addEventListener('load', () => {
+            loadMeetingData(); // Load data awal
+            setupSig('sig-siswa');
+            setupSig('sig-guru');
+        });
+
     </script>
 </body>
 </html>
