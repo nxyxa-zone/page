@@ -36,6 +36,12 @@
             accent-color: #000;
         }
 
+        /* Helper class untuk sembunyikan elemen saat mode siswa */
+        .teacher-only-active {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
         @media print {
             @page { margin: 0; size: auto; }
             body { background: white; padding: 0; margin: 0; }
@@ -52,9 +58,13 @@
                 appearance: none;
             }
             ::placeholder { color: transparent; }
+            /* Hide empty elements in print */
             #student-catatan:empty { display: none; }
             .page-break { page-break-before: always; }
             .avoid-break { page-break-inside: avoid; }
+            
+            /* Pastikan input nilai terlihat jelas saat diprint */
+            #student-nilai, #student-predikat { font-weight: bold; color: black; }
         }
     </style>
     
@@ -77,16 +87,56 @@
         window.checkPin = function() {
             const input = document.getElementById('pin-input').value;
             if (input === TEACHER_PIN) {
+                // 1. Buka Panel Dashboard
                 const panel = document.getElementById('teacher-panel');
                 const btn = document.getElementById('btn-login');
                 closeLoginModal();
                 panel.classList.remove('hidden');
                 btn.classList.add('hidden');
+                
+                // 2. BUKA AKSES NILAI & TTD DI HALAMAN UTAMA (UNLOCK)
+                unlockGradingSection();
+
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                alert("Mode Guru Aktif: Anda sekarang bisa mengisi Nilai dan Tanda Tangan langsung di form.");
             } else {
                 alert("PIN Salah! Coba lagi.");
                 document.getElementById('pin-input').value = "";
             }
+        }
+
+        // Fungsi Membuka Kunci Bagian Penilaian
+        function unlockGradingSection() {
+            const section = document.getElementById('validation-section');
+            section.classList.remove('opacity-75'); // Hapus efek transparan
+            
+            // Aktifkan Input Nilai
+            document.getElementById('student-predikat').disabled = false;
+            document.getElementById('student-nilai').disabled = false;
+            
+            // Ubah Div Catatan jadi Textarea agar bisa diedit
+            const catDiv = document.getElementById('student-catatan');
+            if (catDiv.tagName === 'DIV') {
+                const textArea = document.createElement('textarea');
+                textArea.id = 'student-catatan';
+                textArea.className = 'w-full border-b border-gray-300 bg-white p-2 text-xs h-20 resize-none outline-none focus:border-blue-500';
+                textArea.placeholder = 'Tulis catatan evaluasi untuk siswa...';
+                catDiv.parentNode.replaceChild(textArea, catDiv);
+            }
+
+            // Tampilkan Canvas TTD Guru
+            document.getElementById('teacher-sig-placeholder').style.display = 'none';
+            const canvasGuru = document.getElementById('sig-guru');
+            canvasGuru.style.display = 'block';
+            
+            // Re-setup canvas agar ukurannya benar saat muncul
+            setupSig('sig-guru');
+            
+            // Ubah Badge
+            document.getElementById('score-badge').classList.replace('bg-gray-500', 'bg-blue-600');
+            document.getElementById('score-badge').innerText = "MODE PENILAIAN AKTIF";
+            document.getElementById('score-card').classList.replace('bg-gray-50', 'bg-blue-50');
+            document.getElementById('score-card').classList.replace('border-gray-200', 'border-blue-300');
         }
     </script>
 </head>
@@ -100,7 +150,7 @@
         Akses Guru
     </button>
 
-    <!-- STATUS BAR SISWA -->
+    <!-- STATUS BAR SISWA (Real-time Feedback) -->
     <div id="student-status-bar" class="hidden fixed bottom-0 left-0 right-0 bg-yellow-100 border-t-4 border-yellow-500 p-4 z-[60] shadow-lg no-print slide-up">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -144,7 +194,7 @@
         </div>
     </div>
 
-    <!-- MODAL DASHBOARD GURU -->
+    <!-- MODAL DASHBOARD DATA & GRADING -->
     <div id="dashboard-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[200] flex flex-col p-2 md:p-6 no-print overflow-hidden backdrop-blur-md">
         <div class="bg-white w-full h-full rounded-xl shadow-2xl flex flex-col overflow-hidden relative">
             <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
@@ -161,7 +211,6 @@
                 </div>
             </div>
             <div class="flex-1 flex overflow-hidden">
-                <!-- LIST SISWA -->
                 <div id="student-list-container" class="w-full md:w-1/2 lg:w-2/3 overflow-auto p-4 bg-slate-50 border-r border-slate-200">
                     <table class="w-full text-sm text-left text-slate-600 border-collapse">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-200 sticky top-0">
@@ -170,7 +219,6 @@
                         <tbody id="dashboard-body" class="bg-white divide-y divide-slate-200"></tbody>
                     </table>
                 </div>
-                <!-- FORM PENILAIAN -->
                 <div id="grading-panel" class="hidden md:flex w-full md:w-1/2 lg:w-1/3 flex-col bg-white border-l border-slate-200 overflow-hidden relative">
                     <div class="p-4 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
                         <h3 class="font-bold text-slate-800">📝 Form Penilaian Guru</h3>
@@ -260,7 +308,7 @@
 
                 <section class="mt-8 pt-4 border-t-2 border-slate-800 flex flex-col md:flex-row justify-between gap-6 avoid-break opacity-75 transition-opacity duration-500" id="validation-section">
                     <div class="flex-1 bg-gray-50 border border-gray-200 p-4 rounded relative" id="score-card">
-                        <div class="absolute -top-3 left-3 bg-gray-500 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded" id="score-badge">Diisi Guru</div>
+                        <div class="absolute -top-3 left-3 bg-gray-500 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded" id="score-badge">Diisi Guru (Terkunci)</div>
                         <div class="flex gap-4 mb-3 mt-1">
                             <div class="w-1/2"><label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Predikat</label><input type="text" id="student-predikat" disabled placeholder="-" class="w-full border-b border-gray-300 bg-transparent text-sm font-bold text-gray-800"></div>
                             <div class="w-1/2"><label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nilai</label><input type="text" id="student-nilai" disabled placeholder="-" class="w-full border-b border-gray-300 bg-transparent text-sm font-bold text-gray-800 text-center"></div>
@@ -269,15 +317,26 @@
                     </div>
                     <div class="flex gap-4 justify-end">
                         <div class="text-center w-32"><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Siswa</p><canvas id="sig-siswa" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors"></canvas><button onclick="clearSig('sig-siswa')" id="btn-clear-sig" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button></div>
-                        <div class="text-center w-32"><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Guru Mapel</p><div id="teacher-sig-box" class="w-32 h-20 bg-gray-50 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-300 italic">TTD Guru</div><p class="text-[10px] font-bold mt-1 text-slate-800">M. Nanda S.N., S.Kom.</p></div>
+                        <div class="text-center w-32">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Guru Mapel</p>
+                            <!-- TTD PLACEHOLDER (DEFAULT) -->
+                            <div id="teacher-sig-placeholder" class="w-32 h-20 bg-gray-50 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-300 italic">TTD Guru</div>
+                            <!-- TTD CANVAS (HIDDEN INITIALLY) -->
+                            <canvas id="sig-guru" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors hidden"></canvas>
+                            <button onclick="clearSig('sig-guru')" id="btn-clear-teacher-sig" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1 hidden">Hapus</button>
+                            <p class="text-[10px] font-bold mt-1 text-slate-800">M. Nanda S.N., S.Kom.</p>
+                        </div>
                     </div>
                 </section>
 
                 <div class="no-print pt-6 pb-20 space-y-3">
-                    <button id="btn-submit-lkpd" onclick="saveStudentData()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> UNGGAH KE DATABASE GURU
+                    <button onclick="window.print()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg> 🖨️ SIMPAN SEBAGAI PDF (UNTUK ORTU)
                     </button>
-                    <p class="text-center text-xs text-slate-400" id="submit-hint">Pastikan semua data sudah benar sebelum dikirim. Guru akan memberikan nilai melalui sistem.</p>
+                    <button id="btn-submit-lkpd" onclick="saveStudentData()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> UNGGAH KE GOOGLE DRIVE
+                    </button>
+                    <p class="text-center text-xs text-slate-400" id="submit-hint">Simpan PDF terlebih dahulu, lalu unggah ke Drive Guru.</p>
                 </div>
             </div>
         </div>
@@ -459,8 +518,8 @@
             document.getElementById('student-date').valueAsDate = new Date();
             loadMeetingData();
             setupSig('sig-siswa');
-            setupSig('sig-guru');
             
+            // Inisialisasi Checklist
             const checklistBody = document.getElementById('checklist-sikap-body');
             if (checklistBody) {
                 checklistBody.innerHTML = '';
@@ -490,7 +549,7 @@
         // CONFIG FIREBASE OTOMATIS (DUAL MODE)
         let app, auth, db, currentUser;
         let collectionPath;
-        let selectedStudentClass = null; // Store selected student's class for Drive upload
+        let selectedStudentClass = null; 
 
         try {
             // Mode 1: Editor Canvas (Internal)
@@ -545,98 +604,48 @@
         // --- GLOBAL WINDOW FUNCTIONS ---
         
         window.saveStudentData = async function() {
-            if (!currentUser) {
-                alert("Sedang menghubungkan ke database... Tunggu sebentar.");
-                return;
-            }
-
+            // 1. Validasi Input
             const kelas = document.getElementById('class-select').value;
             const studentSelect = document.getElementById('student-select');
             const nama = studentSelect.options[studentSelect.selectedIndex]?.text;
             const tgl = document.getElementById('student-date').value;
-            const pertemuan = document.getElementById('meetingSelector').options[document.getElementById('meetingSelector').selectedIndex].text;
 
             if (!kelas || !studentSelect.value || !tgl) {
                 alert("Harap lengkapi Nama, Kelas, dan Tanggal!");
                 return;
             }
 
-            const jawabanRefleksi = [];
-            document.querySelectorAll('#content-soal textarea').forEach((ta) => {
-                jawabanRefleksi.push(ta.value || "-");
-            });
-
-            const sikapSummary = [];
-            document.querySelectorAll('#checklist-sikap-body tr').forEach((tr) => {
-                const checkedYa = tr.querySelector('input[type="checkbox"]:first-child').checked;
-                sikapSummary.push(checkedYa ? "Ya" : "Tidak");
-            });
-
-            const submissionData = {
-                kelas: kelas,
-                nama: nama,
-                no_absen: studentSelect.value,
-                tanggal: tgl,
-                pertemuan: pertemuan,
-                jawaban_refleksi: jawabanRefleksi, 
-                sikap_check: sikapSummary,
-                status: "Belum Dinilai",
-                nilai: "-",
-                predikat: "-",
-                catatan: "-",
-                timestamp: Timestamp.now()
+            // 2. LOGIKA UPLOAD DRIVE SESUAI KELAS
+            const driveLinks = {
+                "X TKJ A": "https://drive.google.com/drive/folders/1b2Mg_YHYij2O37oALZjg852woYsCpyFP?usp=drive_link",
+                "X TKJ B": "https://drive.google.com/drive/folders/1p6J-WpOSDDFhtOH1H4OiDNCzNbZA2TkP?usp=drive_link",
+                "X TBSM": "https://drive.google.com/drive/folders/1CCl5Jc7RJW8GdgEERaoOnIA-X7-AyXwd?usp=drive_link"
             };
-
-            try {
-                const btnSubmit = document.getElementById('btn-submit-lkpd');
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = 'Mengirim...';
-
-                const docRef = await addDoc(collection(db, collectionPath), submissionData);
-                
-                const statusBar = document.getElementById('student-status-bar');
-                statusBar.classList.remove('hidden');
-                
-                btnSubmit.style.display = 'none';
-                document.getElementById('submit-hint').innerText = "Data terkirim. Menunggu penilaian guru...";
-                
-                document.querySelectorAll('.main-card input, .main-card textarea, .main-card select').forEach(el => el.disabled = true);
-                document.getElementById('btn-clear-sig').style.display = 'none';
-
-                watchSubmission(docRef.id);
-
-            } catch (e) {
-                alert("Gagal mengirim data: " + e.message);
-                document.getElementById('btn-submit-lkpd').disabled = false;
-                document.getElementById('btn-submit-lkpd').innerHTML = 'KIRIM KE DATABASE GURU';
+            
+            const targetLink = driveLinks[kelas];
+            
+            if (targetLink) {
+                 // Buka Drive di tab baru
+                 window.open(targetLink, '_blank');
+            } else {
+                alert("Link Drive untuk kelas ini belum diatur. Silakan lapor ke Guru.");
+                return;
+            }
+            
+            // 3. (Opsional) Simpan log ke database agar Guru tahu siapa yang "klik" kumpul
+            if (currentUser) {
+                try {
+                     const pertemuan = document.getElementById('meetingSelector').options[document.getElementById('meetingSelector').selectedIndex].text;
+                     const submissionData = {
+                        kelas, nama, no_absen: studentSelect.value, tanggal: tgl, pertemuan,
+                        status: "Diunggah ke Drive", timestamp: Timestamp.now()
+                     };
+                     await addDoc(collection(db, collectionPath), submissionData);
+                } catch(e) { console.log("Log saved locally only"); }
             }
         };
-
-        function watchSubmission(docId) {
-            onSnapshot(doc(db, collectionPath, docId), (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    if (data.status === "Sudah Dinilai") {
-                        document.getElementById('student-predikat').value = data.predikat;
-                        document.getElementById('student-nilai').value = data.nilai;
-                        document.getElementById('student-catatan').innerText = data.catatan;
-                        
-                        const bar = document.getElementById('student-status-bar');
-                        bar.classList.replace('border-yellow-500', 'border-green-500');
-                        bar.classList.replace('bg-yellow-100', 'bg-green-50');
-                        document.getElementById('status-title').innerText = "Selesai Dinilai!";
-                        document.getElementById('status-title').classList.add('text-green-700');
-                        document.getElementById('status-desc').innerText = "Nilai sudah keluar. Silakan cetak laporan.";
-
-                        document.getElementById('score-card').classList.replace('bg-gray-50', 'bg-blue-50');
-                        document.getElementById('validation-section').classList.remove('opacity-75');
-
-                        document.getElementById('btn-print-report').classList.remove('hidden');
-                    }
-                }
-            });
-        }
         
+        // --- DASHBOARD GURU LOGIC ---
         let loadedSubmissions = [];
         window.openDashboard = function() {
             if(!currentUser) return;
@@ -716,14 +725,9 @@
         // --- NEW DASHBOARD ACTION FUNCTIONS ---
         
         window.printStudentFromDashboard = function() {
-             // Logic: Hide dashboard, print, show dashboard
              document.getElementById('dashboard-modal').classList.add('hidden');
-             // In a real app, you'd populate the main view with selected student data first. 
-             // Here we assume the teacher is just printing the current view or we rely on them opening the student first.
-             // For simplicity, we just trigger print.
              setTimeout(() => {
                  window.print();
-                 // Optional: Bring dashboard back after print dialog closes (browser dependent)
              }, 500);
         }
 
