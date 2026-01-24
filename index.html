@@ -3,775 +3,852 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator LKPD & Portofolio PJOK</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f1f5f9; 
-            -webkit-print-color-adjust: exact; 
-            print-color-adjust: exact;
-        }
-
-        .signature-pad {
-            touch-action: none;
-            cursor: crosshair;
-            background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2394a3b8' fill-opacity='0.2' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E");
-        }
-
-        .identity-grid {
-            display: grid;
-            grid-template-columns: 140px 10px 1fr;
-            align-items: center;
-            row-gap: 0.75rem;
-        }
-
-        .custom-checkbox {
-            width: 1.25rem;
-            height: 1.25rem;
-            border: 2px solid #334155;
-            border-radius: 4px;
-            cursor: pointer;
-            accent-color: #000;
-        }
-
-        /* Helper class untuk sembunyikan elemen saat mode siswa */
-        .teacher-only-active {
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        @media print {
-            @page { margin: 0; size: auto; }
-            body { background: white; padding: 0; margin: 0; }
-            .container { max-width: 100% !important; width: 100% !important; padding: 20px !important; }
-            .no-print { display: none !important; }
-            .main-card { box-shadow: none !important; border: none !important; border-radius: 0; }
-            input, textarea, select { 
-                border: none !important; 
-                border-bottom: 1px solid #94a3b8 !important; 
-                background: transparent !important; 
-                padding-left: 0 !important;
-                resize: none;
-                -webkit-appearance: none;
-                appearance: none;
-            }
-            ::placeholder { color: transparent; }
-            /* Hide empty elements in print */
-            #student-catatan:empty { display: none; }
-            .page-break { page-break-before: always; }
-            .avoid-break { page-break-inside: avoid; }
-            
-            /* Pastikan input nilai terlihat jelas saat diprint */
-            #student-nilai, #student-predikat { font-weight: bold; color: black; }
-        }
-    </style>
+    <title>AIJ PRO: Network Engineer Mode</title>
     
-    <!-- CRITICAL UI SCRIPTS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
     <script>
-        const TEACHER_PIN = "270302";
-
-        window.openLoginModal = function() {
-            document.getElementById('login-modal').classList.remove('hidden');
-            const pinInput = document.getElementById('pin-input');
-            pinInput.value = "";
-            pinInput.disabled = false;
-            setTimeout(() => pinInput.focus(), 100);
-        }
-
-        window.closeLoginModal = function() {
-            document.getElementById('login-modal').classList.add('hidden');
-        }
-
-        window.checkPin = function() {
-            const input = document.getElementById('pin-input').value;
-            if (input === TEACHER_PIN) {
-                // 1. Buka Panel Dashboard
-                const panel = document.getElementById('teacher-panel');
-                const btn = document.getElementById('btn-login');
-                closeLoginModal();
-                panel.classList.remove('hidden');
-                btn.classList.add('hidden');
-                
-                // 2. BUKA AKSES NILAI & TTD DI HALAMAN UTAMA (UNLOCK)
-                unlockGradingSection();
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                alert("Mode Guru Aktif: Anda sekarang bisa mengisi Nilai dan Tanda Tangan langsung di form.");
-            } else {
-                alert("PIN Salah! Coba lagi.");
-                document.getElementById('pin-input').value = "";
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a',      /* Slate 900 */
+                        card: '#1e293b',      /* Slate 800 */
+                        primary: '#06b6d4',   /* Cyan 500 */
+                        secondary: '#8b5cf6', /* Violet 500 */
+                        accent: '#10b981',    /* Emerald 500 */
+                        alert: '#ef4444',     /* Red 500 */
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
             }
-        }
-
-        // Fungsi Membuka Kunci Bagian Penilaian
-        function unlockGradingSection() {
-            const section = document.getElementById('validation-section');
-            section.classList.remove('opacity-75'); // Hapus efek transparan
-            
-            // Aktifkan Input Nilai
-            document.getElementById('student-predikat').disabled = false;
-            document.getElementById('student-nilai').disabled = false;
-            
-            // Ubah Div Catatan jadi Textarea agar bisa diedit
-            const catDiv = document.getElementById('student-catatan');
-            if (catDiv.tagName === 'DIV') {
-                const textArea = document.createElement('textarea');
-                textArea.id = 'student-catatan';
-                textArea.className = 'w-full border-b border-gray-300 bg-white p-2 text-xs h-20 resize-none outline-none focus:border-blue-500';
-                textArea.placeholder = 'Tulis catatan evaluasi untuk siswa...';
-                catDiv.parentNode.replaceChild(textArea, catDiv);
-            }
-
-            // Tampilkan Canvas TTD Guru
-            document.getElementById('teacher-sig-placeholder').style.display = 'none';
-            const canvasGuru = document.getElementById('sig-guru');
-            canvasGuru.style.display = 'block';
-            
-            // Re-setup canvas agar ukurannya benar saat muncul
-            setupSig('sig-guru');
-            
-            // Ubah Badge
-            document.getElementById('score-badge').classList.replace('bg-gray-500', 'bg-blue-600');
-            document.getElementById('score-badge').innerText = "MODE PENILAIAN AKTIF";
-            document.getElementById('score-card').classList.replace('bg-gray-50', 'bg-blue-50');
-            document.getElementById('score-card').classList.replace('border-gray-200', 'border-blue-300');
         }
     </script>
+
+    <style>
+        /* Custom Animations */
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); scale: 0.95; } to { opacity: 1; transform: translateY(0); scale: 1; } }
+        
+        /* Tab Styles */
+        .tab-active { background-color: #06b6d4; color: #0f172a; border-bottom: 4px solid #8b5cf6; font-weight: 700; transform: scale(1.02); box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.3); }
+        .tab-inactive { background-color: #1e293b; color: #94a3b8; font-weight: 500; border: 1px solid #334155; }
+        
+        /* Drag & Drop Styles (Puzzle) */
+        .draggable-source { cursor: grab; transition: all 0.2s; }
+        .draggable-source:active { cursor: grabbing; transform: scale(0.95); }
+        .drop-zone { transition: all 0.3s; }
+        .drop-zone.drag-over { background-color: rgba(6, 182, 212, 0.2); border-color: #06b6d4; transform: scale(1.02); }
+
+        /* Game Button Styles */
+        .game-btn-active { background-color: #10b981; color: #0f172a; border-color: #34d399; font-weight: bold; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+        .game-btn-inactive { background-color: #1e293b; color: #94a3b8; border-color: #334155; }
+        
+        /* Failover Game Specifics */
+        .isp-btn { transition: all 0.1s; transform: scale(1); }
+        .isp-btn:active { transform: scale(0.95); }
+        
+        /* Scrollbar for text areas */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
 </head>
-<body class="py-8 px-4 min-h-screen relative">
+<body class="bg-dark font-sans text-slate-200 antialiased min-h-screen flex justify-center">
 
-    <!-- TOMBOL AKSES GURU -->
-    <button onclick="openLoginModal()" id="btn-login" class="fixed top-4 right-4 z-[50] bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold uppercase tracking-wider hover:bg-slate-700 hover:scale-105 transition-all no-print flex items-center gap-2 border border-slate-600 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-        Akses Guru
-    </button>
+    <div class="w-full max-w-lg bg-dark shadow-2xl shadow-cyan-900/20 min-h-screen relative flex flex-col border-x border-slate-800">
 
-    <!-- STATUS BAR SISWA (Real-time Feedback) -->
-    <div id="student-status-bar" class="hidden fixed bottom-0 left-0 right-0 bg-yellow-100 border-t-4 border-yellow-500 p-4 z-[60] shadow-lg no-print slide-up">
-        <div class="max-w-5xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div id="status-icon" class="animate-spin text-yellow-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
+        <header id="top-header" class="hidden relative h-64 overflow-hidden rounded-b-[40px] shadow-xl z-10 group bg-gradient-to-b from-slate-900 to-indigo-950">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent"></div>
+            
+            <div class="absolute bottom-0 left-0 p-6 w-full">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="px-2 py-1 rounded bg-cyan-900/50 border border-cyan-500/30 text-cyan-400 text-[10px] font-mono font-bold">XII TKJ • AIJ • FASE F</span>
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></span>
+                    <span class="text-[10px] text-green-400 font-mono">SYSTEM: ONLINE</span>
                 </div>
-                <div>
-                    <h3 class="font-bold text-slate-800 text-lg" id="status-title">Menunggu Penilaian Guru...</h3>
-                    <p class="text-sm text-slate-600" id="status-desc">Mohon tunggu sebentar, jangan tutup halaman ini.</p>
-                </div>
-            </div>
-            <!-- Tombol Cetak untuk Siswa (Muncul setelah dinilai) -->
-            <button id="btn-print-report" onclick="window.print()" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow-lg transition-all flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                CETAK LAPORAN (PDF)
-            </button>
-        </div>
-    </div>
-
-    <!-- MODAL LOGIN -->
-    <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/90 z-[100] flex items-center justify-center no-print backdrop-blur-sm transition-opacity">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs border-t-4 border-blue-600 animate-fade-in-down">
-            <div class="text-center mb-6">
-                <div class="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">Verifikasi Guru</h3>
-                <p class="text-xs text-slate-500">Masukkan PIN untuk membuka kontrol.</p>
-            </div>
-            <input type="password" id="pin-input" class="w-full border-2 border-slate-200 rounded-lg p-2 text-center text-xl font-bold tracking-[0.5em] mb-4 focus:border-blue-500 focus:outline-none transition-colors" maxlength="6" placeholder="******">
-            <div class="flex gap-2">
-                <button onclick="closeLoginModal()" class="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
-                <button onclick="checkPin()" class="flex-1 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-md">Masuk</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DASHBOARD DATA & GRADING -->
-    <div id="dashboard-modal" class="hidden fixed inset-0 bg-slate-900/95 z-[200] flex flex-col p-2 md:p-6 no-print overflow-hidden backdrop-blur-md">
-        <div class="bg-white w-full h-full rounded-xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div class="bg-slate-800 p-4 flex justify-between items-center text-white shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="bg-blue-500 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div>
-                    <div><h2 class="font-bold text-lg">Dashboard Data & Penilaian</h2><p class="text-xs text-slate-400" id="status-db">Memuat data...</p></div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-bold flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        <span class="hidden md:inline">Download Excel</span>
-                    </button>
-                    <button onclick="closeDashboard()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-bold">Tutup</button>
-                </div>
-            </div>
-            <div class="flex-1 flex overflow-hidden">
-                <div id="student-list-container" class="w-full md:w-1/2 lg:w-2/3 overflow-auto p-4 bg-slate-50 border-r border-slate-200">
-                    <table class="w-full text-sm text-left text-slate-600 border-collapse">
-                        <thead class="text-xs text-slate-700 uppercase bg-slate-200 sticky top-0">
-                            <tr><th class="px-4 py-3 rounded-tl-lg">Kelas & Nama</th><th class="px-4 py-3">Pertemuan</th><th class="px-4 py-3 text-center">Status</th><th class="px-4 py-3 text-center rounded-tr-lg">Aksi</th></tr>
-                        </thead>
-                        <tbody id="dashboard-body" class="bg-white divide-y divide-slate-200"></tbody>
-                    </table>
-                </div>
-                <div id="grading-panel" class="hidden md:flex w-full md:w-1/2 lg:w-1/3 flex-col bg-white border-l border-slate-200 overflow-hidden relative">
-                    <div class="p-4 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
-                        <h3 class="font-bold text-slate-800">📝 Form Penilaian Guru</h3>
-                        <button onclick="closeGradingPanel()" class="md:hidden text-slate-500 hover:text-red-500"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <h1 class="text-3xl font-bold leading-tight mb-1 text-white">Load Balancing <br><span class="text-cyan-400 font-mono text-2xl">_Configuration</span></h1>
+                
+                <div class="flex items-center justify-between mt-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700 backdrop-blur-md">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-slate-900 p-1 rounded-lg shadow-lg h-10 w-10 flex items-center justify-center border border-slate-600">
+                             <i class="fas fa-network-wired text-cyan-500 text-2xl"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-mono">Teacher / SysAdmin</span>
+                            <span class="text-sm font-bold text-white">Bapak Guru TKJ</span>
+                        </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-6" id="grading-content"><div class="text-center text-slate-400 mt-10"><p>Pilih siswa dari daftar di sebelah kiri untuk mulai menilai.</p></div></div>
+                    <button onclick="openAdminModal()" class="text-slate-500 hover:text-cyan-400 transition-colors p-2">
+                        <i class="fas fa-terminal"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <section id="identity-section" class="flex-grow p-8 flex flex-col justify-center fade-in">
+            <div class="text-center mb-8 relative">
+                <div class="absolute inset-0 flex items-center justify-center opacity-20">
+                    <i class="fas fa-shield-alt text-9xl text-cyan-800"></i>
+                </div>
+                <div class="inline-block p-4 rounded-full bg-slate-800 border border-slate-700 mb-4 shadow-lg text-cyan-400 text-3xl relative z-10">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white font-mono relative z-10">Auth_User_Login</h2>
+                <p class="text-slate-400 text-sm mt-1 relative z-10">Masukkan identitas untuk akses Laboratorium Virtual.</p>
+            </div>
+
+            <form id="identity-form" class="space-y-5 relative z-10">
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-cyan-500 font-mono ml-1"><i class="fas fa-user mr-1"></i> USERNAME / NAMA</label>
+                    <input type="text" id="student-name" class="w-full px-5 py-3 rounded-lg bg-slate-800 border border-slate-700 focus:border-cyan-500 transition-all outline-none font-medium text-white placeholder-slate-600" placeholder="Nama Lengkap..." required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-cyan-500 font-mono ml-1"><i class="fas fa-users mr-1"></i> KELAS</label>
+                        <select id="student-class" class="w-full px-5 py-3 rounded-lg bg-slate-800 border border-slate-700 focus:border-cyan-500 transition-all outline-none font-medium text-white">
+                            <option>XII TKJ 1</option>
+                            <option>XII TKJ 2</option>
+                            <option>XII TKJ 3</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-cyan-500 font-mono ml-1"><i class="fas fa-list-ol mr-1"></i> NO. ABSEN</label>
+                        <input type="number" id="student-number" class="w-full px-5 py-3 rounded-lg bg-slate-800 border border-slate-700 focus:border-cyan-500 transition-all outline-none font-medium text-white placeholder-slate-600" placeholder="00" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-lg shadow-lg mt-6 flex justify-center items-center gap-3 font-mono border-b-4 border-cyan-800 transition-transform active:scale-95">
+                    <span>INITIALIZE LAB</span> <i class="fas fa-power-off"></i>
+                </button>
+            </form>
+        </section>
+
+        <main id="main-content" class="hidden flex-col flex-grow bg-dark relative z-20">
+            
+            <div class="flex text-sm text-center bg-slate-900 shadow-lg sticky top-0 z-30 mx-4 mt-4 rounded-xl overflow-hidden p-1 gap-1 border border-slate-800" id="tabs">
+                <button onclick="switchTab('konsep')" id="tab-konsep" class="flex-1 py-2 rounded-lg transition-all duration-300 font-mono text-[10px] md:text-xs">Konsep 🌐</button>
+                <button onclick="switchTab('algo')" id="tab-algo" class="flex-1 py-2 rounded-lg transition-all duration-300 font-mono text-[10px] md:text-xs">Algo 🔀</button>
+                <button onclick="switchTab('simulasi')" id="tab-simulasi" class="flex-1 py-2 rounded-lg transition-all duration-300 font-mono text-[10px] md:text-xs text-yellow-400">Games 🕹️</button>
+                <button onclick="switchTab('config')" id="tab-config" class="flex-1 py-2 rounded-lg transition-all duration-300 font-mono text-[10px] md:text-xs">Config ⚙️</button>
+            </div>
+
+            <div class="p-6 space-y-8 pb-32">
+                
+                <section class="fade-in bg-indigo-950/30 border-l-4 border-indigo-500 p-4 rounded-r-lg shadow-lg relative overflow-hidden">
+                     <div class="absolute right-0 top-0 p-2 opacity-10"><i class="fas fa-bullseye text-6xl text-indigo-400"></i></div>
+                     <h3 class="text-[10px] font-bold text-indigo-400 uppercase font-mono mb-1 tracking-widest z-10 relative">🎯 Capaian Pembelajaran</h3>
+                     <p class="text-xs md:text-sm text-indigo-100 italic relative z-10 leading-relaxed" id="cp-text">
+                         </p>
+                </section>
+
+                <section id="standard-content" class="fade-in">
+                    <div class="flex items-center gap-3 mb-4 pl-1">
+                        <div class="w-1 h-6 bg-cyan-500 rounded-full"></div>
+                        <h2 class="text-lg font-bold text-white font-mono uppercase" id="material-title">Judul Materi</h2>
+                    </div>
                     
-                    <!-- TOMBOL AKSI GURU (CETAK & UPLOAD) -->
-                    <div id="grading-actions" class="p-4 bg-white border-t border-slate-200 hidden flex-col gap-2">
-                        <button onclick="printStudentFromDashboard()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 rounded flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                            Cetak / Preview PDF
-                        </button>
-                        <button onclick="uploadToDriveFromDashboard()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                            Upload ke Drive Kelas
-                        </button>
+                    <div class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl mb-4 aspect-video relative group border border-slate-800">
+                        <div class="loader absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0">
+                            <i class="fas fa-circle-notch fa-spin text-cyan-500 text-3xl"></i>
+                        </div>
+                        <iframe id="video-embed" class="w-full h-full relative z-10" src="" title="Materi Video" frameborder="0" allowfullscreen></iframe>
                     </div>
+
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 text-sm text-slate-300 leading-relaxed shadow-sm mb-6 flex gap-3">
+                        <i class="fas fa-info-circle text-cyan-500 mt-1 shrink-0"></i>
+                        <p id="video-desc" class="italic font-mono text-xs"></p>
+                    </div>
+
+                    <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 relative overflow-hidden shadow-lg mb-6">
+                        <div class="absolute top-0 right-0 p-3 opacity-5"><i class="fas fa-file-code text-5xl"></i></div>
+                        <h4 class="font-bold text-cyan-400 mb-4 font-mono"><i class="fas fa-code mr-2"></i>Knowledge Base:</h4>
+                        <ul class="space-y-3" id="key-points"></ul>
+                    </div>
+
+                    <section class="bg-slate-800 p-5 rounded-xl border border-slate-700 mb-6">
+                        <h3 class="font-bold font-mono text-secondary mb-3"><i class="fas fa-book mr-2"></i>Terminology</h3>
+                        <div class="grid gap-3 text-sm" id="glossary-container"></div>
+                    </section>
+
+                    <section class="bg-slate-900 p-1 rounded-lg border border-slate-700">
+                         <div class="bg-slate-800 rounded p-4">
+                            <h2 class="text-sm font-bold text-white font-mono mb-3"><i class="fas fa-edit mr-2 text-yellow-500"></i>Exam Simulation (5 Soal)</h2>
+                            <div id="quiz-container" class="space-y-4"></div>
+                        </div>
+                    </section>
+                </section>
+
+                <section id="game-center" class="hidden fade-in">
+                    
+                    <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+                        <button onclick="switchGame('puzzle')" id="btn-game-puzzle" class="flex-1 py-2 px-3 rounded border text-[10px] font-mono whitespace-nowrap game-btn-active">Puzzle 🧩</button>
+                        <button onclick="switchGame('cli')" id="btn-game-cli" class="flex-1 py-2 px-3 rounded border text-[10px] font-mono whitespace-nowrap game-btn-inactive">CLI Rush ⌨️</button>
+                        <button onclick="switchGame('failover')" id="btn-game-failover" class="flex-1 py-2 px-3 rounded border text-[10px] font-mono whitespace-nowrap game-btn-inactive">Reflex ⚡</button>
+                    </div>
+
+                    <div id="game-puzzle-area" class="fade-in">
+                        <div class="bg-slate-900 rounded-xl border border-slate-700 p-4">
+                            <h3 class="font-bold text-yellow-400 font-mono text-sm mb-2"><i class="fas fa-puzzle-piece"></i> Visual Config Builder</h3>
+                            <p class="text-xs text-slate-400 mb-4">Susun blok script untuk logika <strong>Failover (Check Gateway)</strong>. Urutan harus benar!</p>
+                            
+                            <div class="flex flex-wrap gap-2 mb-6 bg-slate-800 p-3 rounded-lg min-h-[60px]" id="source-container">
+                                <div draggable="true" class="draggable-source bg-red-900/50 border border-red-500 text-red-300 px-3 py-2 rounded text-xs font-mono select-none" data-id="1">/ip route add</div>
+                                <div draggable="true" class="draggable-source bg-blue-900/50 border border-blue-500 text-blue-300 px-3 py-2 rounded text-xs font-mono select-none" data-id="2">dst-address=0.0.0.0/0</div>
+                                <div draggable="true" class="draggable-source bg-green-900/50 border border-green-500 text-green-300 px-3 py-2 rounded text-xs font-mono select-none" data-id="3">gateway=8.8.8.8</div>
+                                <div draggable="true" class="draggable-source bg-purple-900/50 border border-purple-500 text-purple-300 px-3 py-2 rounded text-xs font-mono select-none" data-id="4">check-gateway=ping</div>
+                                <div draggable="true" class="draggable-source bg-yellow-900/50 border border-yellow-500 text-yellow-300 px-3 py-2 rounded text-xs font-mono select-none" data-id="5">distance=1</div>
+                            </div>
+
+                            <div class="relative">
+                                <div class="absolute top-0 left-0 bg-slate-700 text-slate-300 text-[10px] px-2 py-1 rounded-br z-10 font-mono">Terminal Script Preview</div>
+                                <div id="target-container" class="drop-zone w-full h-32 bg-black border-2 border-dashed border-slate-600 rounded-lg flex flex-wrap items-center content-start p-8 gap-2 font-mono text-sm text-green-400">
+                                    <span class="text-slate-600 pointer-events-none select-none" id="placeholder-text">// Drag Code Here...</span>
+                                </div>
+                            </div>
+                            <div id="puzzle-feedback" class="mt-3 text-xs font-mono font-bold text-center hidden"></div>
+                        </div>
+                    </div>
+
+                    <div id="game-cli-area" class="hidden fade-in">
+                        <div class="bg-black rounded-xl border-2 border-green-500/50 p-6 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-[url('https://media.giphy.com/media/26tn33aiTi1jbp6x2/giphy.gif')] opacity-10 bg-cover pointer-events-none"></div>
+
+                            <div class="flex justify-between items-center mb-6 relative z-20">
+                                <h3 class="font-bold text-green-500 font-mono text-sm"><i class="fas fa-terminal"></i> LB COMMAND RUSH</h3>
+                                <div class="text-[10px] text-green-400 font-mono">SCORE: <span id="cli-score" class="text-xl">0</span></div>
+                            </div>
+                            <p class="text-green-800 text-xs font-mono mb-1 relative z-20">TYPE THIS COMMAND:</p>
+                            <div class="bg-slate-900 border border-green-900 p-2 rounded mb-4 text-center relative z-20">
+                                <span id="cli-target" class="text-lg font-bold text-white font-mono tracking-wider select-none">ip route print</span>
+                            </div>
+                            <div class="relative z-20">
+                                <span class="absolute left-3 top-3 text-green-600 font-mono font-bold">></span>
+                                <input type="text" id="cli-input" class="w-full bg-black border border-green-700 text-green-400 font-mono p-3 pl-8 rounded focus:outline-none uppercase placeholder-green-900" placeholder="TYPE HERE..." autocomplete="off" disabled>
+                            </div>
+                            <div class="w-full h-1 bg-green-900 mt-4 relative z-20"><div id="cli-timer-bar" class="h-full bg-green-400 w-full"></div></div>
+                            <div id="cli-message" class="text-center mt-2 h-4 text-[10px] font-mono text-red-500 relative z-20"></div>
+                            <button onclick="startCliGame()" id="btn-start-cli" class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded mt-4 font-mono text-xs relative z-20">START SESSION</button>
+                        </div>
+                    </div>
+
+                    <div id="game-failover-area" class="hidden fade-in">
+                        <div class="bg-slate-900 rounded-xl border border-slate-700 p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-red-400 font-mono text-sm"><i class="fas fa-random"></i> Failover Reflex</h3>
+                                <div class="text-[10px] text-slate-400 font-mono">Packets Sent: <span id="failover-score" class="text-red-400 font-bold">0</span></div>
+                            </div>
+                            
+                            <div class="text-[10px] text-slate-400 mb-4 bg-black/50 p-2 rounded border border-slate-700">
+                                <p><span class="text-cyan-400 font-bold">MISSION:</span> Kirim trafik ke <span class="text-green-400">ISP AKTIF</span>.</p>
+                                <ul class="list-disc ml-4 mt-1">
+                                    <li>ISP 1 (Primary) = Prioritas Utama (Distance 1).</li>
+                                    <li>ISP 2 (Backup) = Hanya jika ISP 1 Offline (Merah).</li>
+                                    <li>Jika ISP 1 Online lagi, <strong>WAJIB</strong> pindah balik ke ISP 1!</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div id="isp1-container" class="relative">
+                                    <div id="isp1-status" class="mb-2 text-xs font-bold bg-green-900 text-green-400 py-1 rounded">ISP 1: ONLINE</div>
+                                    <button onclick="routePacket(1)" id="btn-isp1" class="isp-btn w-full h-32 bg-slate-800 border-2 border-green-500 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-700 group relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-green-500/10 group-hover:bg-green-500/20 transition-colors"></div>
+                                        <i class="fas fa-server text-3xl text-slate-200 z-10"></i>
+                                        <span class="text-xs font-bold text-white z-10">PRIMARY</span>
+                                        <span class="text-[10px] text-slate-400 z-10">Distance: 1</span>
+                                    </button>
+                                </div>
+                                
+                                <div id="isp2-container" class="relative">
+                                    <div id="isp2-status" class="mb-2 text-xs font-bold bg-yellow-900 text-yellow-400 py-1 rounded">ISP 2: STANDBY</div>
+                                    <button onclick="routePacket(2)" id="btn-isp2" class="isp-btn w-full h-32 bg-slate-800 border-2 border-yellow-500 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-700 group relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-yellow-500/10 group-hover:bg-yellow-500/20 transition-colors"></div>
+                                        <i class="fas fa-server text-3xl text-slate-200 z-10"></i>
+                                        <span class="text-xs font-bold text-white z-10">BACKUP</span>
+                                        <span class="text-[10px] text-slate-400 z-10">Distance: 2</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="failover-msg" class="text-center mt-3 text-xs font-bold h-4 text-white"></div>
+                            
+                            <button onclick="startFailoverGame()" id="btn-start-failover" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-2 rounded mt-4 font-mono text-xs shadow-[0_0_15px_rgba(185,28,28,0.4)]">START ROUTING</button>
+                        </div>
+                    </div>
+
+                </section>
+
+                <section class="fade-in bg-slate-800 p-6 rounded-xl border border-slate-700 mt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-white text-sm font-mono"><i class="fas fa-user-astronaut text-yellow-500 mr-2"></i>Profil Pelajar Pancasila</h3>
+                            <p class="text-[10px] text-slate-400 mt-1">Refleksi Soft Skill & Budaya Kerja</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3" id="p5-checklist-container">
+                        </div>
+                </section>
+
+                <section class="fade-in mt-6">
+                    <div class="bg-slate-900 p-1 rounded-lg border border-slate-700">
+                         <div class="bg-slate-800 rounded p-4">
+                            <h3 class="font-bold text-white text-sm font-mono mb-2"><i class="fas fa-edit text-cyan-500 mr-2"></i>Catatan / Laporan Kendala</h3>
+                            <textarea id="input-refleksi" class="w-full bg-transparent text-slate-300 font-mono text-xs h-20 outline-none resize-none placeholder-slate-600 border-none focus:ring-0" placeholder="Tulis kendala konfigurasi atau strategi game kamu disini..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="pt-6 pb-6">
+                    <button onclick="submitLKPD()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex justify-between items-center px-6 group border-b-4 border-cyan-800 active:border-b-0 active:translate-y-1">
+                        <div class="flex flex-col items-start">
+                            <span class="text-[10px] text-cyan-200 font-mono uppercase tracking-wider">Project Done?</span>
+                            <span class="text-base font-bold">Submit Report via WhatsApp</span>
+                        </div>
+                        <div class="bg-white text-cyan-600 w-10 h-10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"><i class="fab fa-whatsapp text-xl"></i></div>
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
+        </main>
 
-    <!-- MAIN CONTAINER -->
-    <div class="max-w-[210mm] mx-auto container space-y-6">
-        <div id="teacher-panel" class="hidden bg-slate-800 text-white p-4 rounded-lg shadow-xl no-print flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-blue-400">
-            <div><h2 class="font-bold text-base text-blue-300 flex items-center gap-2"><span>🎛️</span> KONTROL MATERI</h2><p class="text-[10px] text-slate-400 mt-1">Mode Guru Aktif • Pilih Pertemuan untuk update LKPD</p></div>
-            <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-                <select id="meetingSelector" onchange="loadMeetingData()" class="bg-slate-700 border border-slate-600 text-white text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2">
-                    <option value="1">Pertemuan 1: Lari Jarak Pendek (Sprint)</option>
-                    <option value="2">Pertemuan 2: Lari Jarak Menengah</option>
-                    <option value="3">Pertemuan 3: Lari Jarak Jauh (Endurance)</option>
-                </select>
-                <button onclick="openDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2.5 rounded font-bold transition w-full sm:w-auto flex items-center gap-2">📂 Dashboard & Penilaian</button>
-                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-2.5 rounded font-bold transition w-full sm:w-auto">Keluar</button>
-            </div>
-        </div>
-
-        <div class="bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-200 main-card relative min-h-[297mm]">
-            <div class="p-8 border-b-2 border-slate-800 relative text-center">
-                <div class="hidden md:flex absolute top-6 left-8 w-16 h-16 bg-white border-2 border-slate-800 rounded items-center justify-center text-[10px] text-slate-800 font-black leading-tight text-center">LOGO<br>SEKOLAH</div>
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight uppercase mb-1">LKPD & PORTOFOLIO SISWA</h1>
-                <h2 class="text-sm font-bold text-slate-600 uppercase tracking-[0.2em] mb-4">Pendidikan Jasmani, Olahraga, dan Kesehatan</h2>
-                <div class="inline-flex gap-0 text-xs font-semibold border border-slate-300 rounded overflow-hidden"><span class="bg-slate-100 text-slate-600 px-4 py-1.5 border-r border-slate-300">Fase E (Kelas X)</span><span class="bg-white text-blue-700 px-4 py-1.5 uppercase">Materi Pokok: Lari (Jarak Pendek s.d. Jauh)</span></div>
-            </div>
-
-            <div class="p-8 md:p-10 space-y-8">
-                <div class="flex flex-col md:flex-row justify-between items-start gap-8 border-b-2 border-dashed border-slate-300 pb-6 avoid-break">
-                    <div class="w-full md:w-2/3 identity-grid text-sm">
-                        <label class="font-bold text-slate-700 uppercase">Kelas</label><div class="font-bold">:</div>
-                        <select id="class-select" onchange="loadStudents()" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-blue-50/50 focus:bg-blue-100 font-semibold cursor-pointer"><option value="">-- Pilih Kelas --</option><option value="X TKJ A">X TKJ A</option><option value="X TKJ B">X TKJ B</option><option value="X TBSM">X TBSM</option></select>
-                        <label class="font-bold text-slate-700 uppercase">Nama Siswa</label><div class="font-bold">:</div>
-                        <select id="student-select" onchange="updateAbsen()" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-blue-50/50 focus:bg-blue-100 font-semibold cursor-pointer"><option value="">-- Pilih Nama Siswa --</option></select>
-                        <label class="font-bold text-slate-700 uppercase">No. Absen</label><div class="font-bold">:</div>
-                        <input type="text" id="absen-input" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-gray-100 text-slate-500 font-mono" readonly placeholder="Otomatis terisi...">
-                        <label class="font-bold text-slate-700 uppercase">Tanggal</label><div class="font-bold">:</div>
-                        <input type="date" id="student-date" class="w-full border-b border-slate-400 outline-none px-1 py-0.5 bg-blue-50/50 uppercase text-slate-700 font-mono">
+        <div id="teacher-dashboard" class="hidden fixed inset-0 bg-dark z-50 overflow-y-auto">
+            <div class="bg-slate-900 border-b border-slate-700 text-white p-5 sticky top-0 z-50 shadow-lg">
+                <div class="flex justify-between items-center max-w-2xl mx-auto w-full">
+                    <div>
+                        <p class="text-[10px] text-cyan-500 uppercase tracking-widest font-mono">Root Access Granted</p>
+                        <h2 class="text-lg font-bold text-white"><i class="fas fa-server mr-2"></i>Teacher Console</h2>
                     </div>
-                    <div class="w-full md:w-1/3 bg-slate-50 p-4 border border-slate-200 rounded text-center"><p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Fokus Materi</p><p id="display-meeting-title" class="text-sm font-bold text-blue-700 leading-tight">Pertemuan 1</p></div>
+                    <button onclick="closeDashboard()" class="bg-red-500/20 text-red-500 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-times"></i></button>
                 </div>
-
-                <section class="avoid-break">
-                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2"><span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">I</span>Ringkasan Materi (Poin Penting)</h3>
-                    <div id="content-materi" class="bg-slate-50 p-4 rounded border-l-4 border-slate-300 text-xs text-slate-700 leading-relaxed text-justify space-y-2"></div>
-                </section>
-
-                <section class="avoid-break">
-                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2"><span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">II</span>Kartu Tugas Gerak</h3>
-                    <p class="text-xs text-slate-500 italic mb-3 ml-8">Lakukan aktivitas berikut dan beri tanda centang jika berhasil:</p>
-                    <div id="content-aktivitas" class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-2 md:pl-8"></div>
-                </section>
-
-                <section class="avoid-break">
-                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2"><span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">III</span>Refleksi & Pemahaman</h3>
-                    <div id="content-soal" class="space-y-4 pl-2 md:pl-8"></div>
-                </section>
-
-                <section class="avoid-break">
-                    <h3 class="font-bold text-slate-900 mb-2 text-sm uppercase flex items-center gap-2"><span class="bg-slate-800 text-white w-6 h-6 flex items-center justify-center rounded text-xs">IV</span>Penilaian Sikap (Profil Pelajar Pancasila)</h3>
-                    <div class="pl-0 md:pl-8">
-                        <table class="w-full text-xs border border-slate-300">
-                            <thead class="bg-slate-100 font-bold uppercase text-slate-700"><tr><th class="p-2 border border-slate-300 w-8">No</th><th class="p-2 border border-slate-300 text-left">Indikator Perilaku</th><th class="p-2 border border-slate-300 w-12 text-center">Ya</th><th class="p-2 border border-slate-300 w-12 text-center">Tdk</th></tr></thead>
-                            <tbody class="text-slate-800" id="checklist-sikap-body"></tbody>
+            </div>
+            <div class="p-5 space-y-6 max-w-2xl mx-auto pb-24 text-slate-300">
+                <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h3 class="font-bold text-blue-400 mb-3 flex justify-between font-mono">
+                        <span><i class="fas fa-database mr-2"></i>Log Data Siswa</span>
+                        <button onclick="clearData()" class="text-[10px] bg-red-900/50 text-red-400 px-2 py-1 rounded hover:bg-red-900">Flush DB</button>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left text-slate-400 font-mono">
+                            <thead class="text-slate-500 uppercase bg-slate-900"><tr><th class="px-4 py-2">User</th><th class="px-4 py-2">Score Info</th></tr></thead>
+                            <tbody id="student-data-body">
+                                </tbody>
                         </table>
+                        <p id="no-data-msg" class="text-center text-xs p-4 text-slate-600">No logs found in temporary storage.</p>
                     </div>
-                </section>
-
-                <section class="mt-8 pt-4 border-t-2 border-slate-800 flex flex-col md:flex-row justify-between gap-6 avoid-break opacity-75 transition-opacity duration-500" id="validation-section">
-                    <div class="flex-1 bg-gray-50 border border-gray-200 p-4 rounded relative" id="score-card">
-                        <div class="absolute -top-3 left-3 bg-gray-500 text-white px-2 py-0.5 text-[10px] font-bold uppercase rounded" id="score-badge">Diisi Guru (Terkunci)</div>
-                        <div class="flex gap-4 mb-3 mt-1">
-                            <div class="w-1/2"><label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Predikat</label><input type="text" id="student-predikat" disabled placeholder="-" class="w-full border-b border-gray-300 bg-transparent text-sm font-bold text-gray-800"></div>
-                            <div class="w-1/2"><label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Nilai</label><input type="text" id="student-nilai" disabled placeholder="-" class="w-full border-b border-gray-300 bg-transparent text-sm font-bold text-gray-800 text-center"></div>
-                        </div>
-                        <div><label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Catatan Evaluasi</label><div id="student-catatan" class="w-full border-b border-gray-300 p-2 text-xs h-12 text-gray-400 italic">Menunggu penilaian guru...</div></div>
-                    </div>
-                    <div class="flex gap-4 justify-end">
-                        <div class="text-center w-32"><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Siswa</p><canvas id="sig-siswa" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors"></canvas><button onclick="clearSig('sig-siswa')" id="btn-clear-sig" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1">Hapus / Ulang</button></div>
-                        <div class="text-center w-32">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Guru Mapel</p>
-                            <!-- TTD PLACEHOLDER (DEFAULT) -->
-                            <div id="teacher-sig-placeholder" class="w-32 h-20 bg-gray-50 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-300 italic">TTD Guru</div>
-                            <!-- TTD CANVAS (HIDDEN INITIALLY) -->
-                            <canvas id="sig-guru" class="signature-pad w-32 h-20 bg-white border-2 border-dashed border-slate-300 rounded hover:border-slate-400 transition-colors hidden"></canvas>
-                            <button onclick="clearSig('sig-guru')" id="btn-clear-teacher-sig" class="no-print text-[10px] text-red-500 hover:text-red-700 font-bold mt-1 hidden">Hapus</button>
-                            <p class="text-[10px] font-bold mt-1 text-slate-800">M. Nanda S.N., S.Kom.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <div class="no-print pt-6 pb-20 space-y-3">
-                    <button onclick="window.print()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg> 🖨️ SIMPAN SEBAGAI PDF (UNTUK ORTU)
-                    </button>
-                    <button id="btn-submit-lkpd" onclick="saveStudentData()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all transform hover:-translate-y-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> UNGGAH KE GOOGLE DRIVE
-                    </button>
-                    <p class="text-center text-xs text-slate-400" id="submit-hint">Simpan PDF terlebih dahulu, lalu unggah ke Drive Guru.</p>
                 </div>
             </div>
         </div>
-        <p class="text-center text-slate-400 text-[10px] mt-4 mb-8 no-print">&copy; 2026 Platform Merdeka Mengajar - Modul PJOK</p>
+
+        <div id="admin-modal" class="hidden fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 backdrop-blur-sm modal">
+            <div class="bg-slate-900 rounded-lg p-8 w-full max-w-sm text-center border border-green-500/30 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+                <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+                <div class="text-green-500 text-4xl mb-2"><i class="fas fa-user-shield"></i></div>
+                <h3 class="text-xl font-bold text-white font-mono mb-4">ROOT ACCESS</h3>
+                <input type="password" id="admin-pin" class="w-full text-center text-xl font-mono bg-black border border-slate-700 text-green-500 py-2 mb-6 rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="PIN: 270302">
+                <button onclick="checkPin()" class="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded font-mono shadow-lg transition-transform active:scale-95">ENTER >_</button>
+            </div>
+        </div>
+
+        <footer class="bg-dark border-t border-slate-800 p-8 text-center pb-10">
+            <div class="flex flex-col items-center justify-center gap-2">
+                <p class="text-xs text-slate-500 font-mono">Modul Ajar Digital AIJ - Fase F SMK</p>
+                <div class="text-xs text-slate-600 font-medium flex items-center gap-1 bg-slate-900 px-3 py-1 rounded border border-slate-800">
+                    <span>Dev by</span>
+                    <a href="https://instagram.com/nxyxa.27" target="_blank" class="text-cyan-600 font-bold hover:text-cyan-400 flex items-center gap-1">@NxyxA <i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </footer>
     </div>
 
-    <!-- MAIN DATA SCRIPT -->
     <script>
-        document.getElementById('pin-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') checkPin();
-        });
-
-        // DATA SISWA
-        const studentData = {
-            "X TKJ A": ["ALDO BARETO", "DARMA YANTI", "DIRLY REVA RADITYA", "FAIZ FATAH HILLAH", "FIRMANSYAH ARDIANTO", "GEDE ARYA DEVA NANDA", "I GEDE JAYA SATRIA", "IDA AYU PUTU GITA NIRAWATI", "KOMANG RENDI KAJENG PRATAMA", "LUTVIA ANAS TASYA", "MADE AYU BUDIATI", "MUHAMAD LABIB MIRZA", "NABILA NUR HAFIFAH", "NI KETUT DESTA LESTARI", "RAFLY MEY WILIAN", "RIFAI ARYA MAULANA", "SEVA WISNU RAMADHAN", "SHEILLA NIKI DESTIANI", "TYAN FAJAR PRASETYO", "ZIVARA APRILIA"],
-            "X TKJ B": ["ANISA", "CLARA SALSABILA", "FEBRIAN RIZKI VALENTINO", "GUSTI AYU KOMANG VYA KARTINI", "I KOMANG ARNAWAN WIGUNA", "I MADE GILANG PURNAJAYA", "I WAYAN TEGAR WALOYO", "IDA AYU SINDI SINTYAWATI", "KOMANG RAFA DINATA", "KOMANG REDITE", "MADE EDI PURWATE", "NI KADEK ARTIKA CHANDRA DEWI", "NI LUH MERY ARYAWATI", "NYOMAN TRI APSARI WIDIA", "PANDE KETUT BAGAS KARA", "PUTU FITRI YANI", "REHAN OGI DWI PRANATA", "RIZELENEY APRILIA", "SYIFA ADELIA CAHYANI", "WAYAN SUDIARTE"],
-            "X TBSM": ["ABBEL DANU VIAN", "AHMAD FAHRI MUSTOFA", "ALDI MIFTAKHUL JINAN", "ALDO VIRMANSYAH", "ARYA AL FAIS", "DENIS LUTVI AZIZ", "DEWA GEDE WISNU SATRIAWAN", "EDO JAYA PRATAMA", "EXSAN BAYU NUGEROHO", "FADLI ILHAM ABDILLAH", "FILLPUS AL FINO", "I DEWA GEDE ADITYA SAPUTRA", "MUHAMAD ALDO SAPUTRA", "MUHAMMAD FAJRI KATAMI", "MUSTOFA", "NANDA WIJAYA", "RADIT PRASTYO", "RAYHAN PRATAMA", "REFAN ALDIANO", "RENDY SETIAWAN", "RENO AVIAN", "REZA PRASTOMI", "RISJAYA PRATAMA", "YUSUF APRIL ERLANGGA", "WAYAN ANDIKA"]
+        // === 1. DATA KONTEN LENGKAP (MATERI KATA-KATA) ===
+        const contentData = {
+            konsep: {
+                title: "Konsep Load Balancing 🌐",
+                cp: "Peserta didik mampu memahami konsep manajemen bandwidth, Load Balancing, dan Failover untuk High Availability jaringan.",
+                video: "https://www.youtube.com/embed/PysqJ_Ue7us", // Ganti dengan link video materi yang sesuai
+                videoDesc: "Video ini menjelaskan perbedaan mendasar antara membagi beban (Load Balance) dan jalur cadangan (Failover).",
+                glossary: [
+                    { term: "Load Balancing", def: "Teknik mendistribusikan beban trafik ke dua atau lebih jalur koneksi secara seimbang." }, 
+                    { term: "Failover", def: "Mekanisme otomatis memindahkan jalur ke link cadangan saat link utama mati (Down)." },
+                    { term: "High Availability", def: "Sistem yang terus menerus beroperasi tanpa henti dalam waktu lama." },
+                    { term: "Throughput", def: "Jumlah data yang benar-benar terkirim dalam satu waktu." }
+                ],
+                points: [
+                    "Optimalisasi Resource: Mencegah satu ISP overload sementara ISP lain menganggur.",
+                    "Redundansi: Menjaga internet tetap ON meskipun salah satu ISP gangguan.",
+                    "Fleksibilitas: Dapat menggabungkan kecepatan dari 2 ISP berbeda (Aggregation).",
+                    "Tidak menambah kecepatan 1 user, tapi menambah kapasitas total jaringan."
+                ],
+                quiz: [
+                    { q: "Apa tujuan utama Load Balancing?", opts: ["Menghemat Kuota", "Membagi Beban Trafik", "Memblokir Situs"], ans: 1, exp: "Load Balancing bertujuan mendistribusikan trafik agar tidak menumpuk di satu jalur." },
+                    { q: "Jika ISP A mati, trafik pindah ke ISP B. Disebut apa?", opts: ["Load Balance", "Bandwidth Test", "Failover"], ans: 2, exp: "Failover adalah pemindahan jalur otomatis saat gangguan." }
+                ]
+            },
+            algo: {
+                title: "Algoritma Penyeimbang 🔀",
+                cp: "Peserta didik mampu mengevaluasi penggunaan algoritma Round Robin, PCC, dan ECMP dalam studi kasus.",
+                video: "https://www.youtube.com/embed/5dJ7d6t29jg", 
+                videoDesc: "Analisis mendalam mengenai metode PCC vs Round Robin.",
+                glossary: [
+                    { term: "ECMP", def: "Equal Cost Multi Path. Load balancing sederhana menggunakan gateway ganda." }, 
+                    { term: "PCC", def: "Per Connection Classifier. Mengelompokkan trafik berdasarkan kriteria (src-address, dst-address, dll)." },
+                    { term: "Round Robin", def: "Algoritma giliran. Paket 1 ke ISP A, Paket 2 ke ISP B, dst." },
+                    { term: "Sticky Connection", def: "Memastikan satu user selalu lewat jalur yang sama agar sesi aman (Banking)." }
+                ],
+                points: [
+                    "Round Robin: Adil secara hitungan paket, tapi bisa merusak sesi login (Secure Web Error).",
+                    "PCC (Src-Address): User A selalu lewat ISP 1, User B selalu lewat ISP 2. Stabil untuk browsing.",
+                    "ECMP: Paling mudah dikonfigurasi, tapi kurang stabil untuk trafik HTTPS.",
+                    "NTH: Metode penghitung paket ke-N (jarang dipakai sekarang)."
+                ],
+                quiz: [
+                    { q: "Metode mana yang paling aman untuk E-Banking?", opts: ["Round Robin", "PCC (Src-Address)", "Random"], ans: 1, exp: "PCC Src-Address menjaga IP publik user tetap konsisten." },
+                    { q: "ECMP singkatan dari?", opts: ["Equal Cost Multi Path", "Electronic Card Multi Pay", "Error Checking Multi Port"], ans: 0, exp: "Equal Cost Multi Path." }
+                ]
+            },
+            simulasi: { 
+                title: "Game Center 🕹️", 
+                cp: "Peserta didik mampu mengasah logika scripting, kecepatan mengetik CLI, dan insting failover melalui simulasi gamifikasi.",
+                points: [], glossary: [], quiz: [] 
+            },
+            config: {
+                title: "Konfigurasi Mikrotik ⚙️",
+                cp: "Peserta didik mampu melakukan konfigurasi Load Balancing metode PCC dan Failover Check Gateway.",
+                video: "https://www.youtube.com/embed/HuK6dWyK1XU", 
+                videoDesc: "Tutorial langkah demi langkah konfigurasi PCC di Winbox.",
+                glossary: [
+                    { term: "Mangle", def: "Fitur Firewall untuk menandai (marking) paket data." }, 
+                    { term: "Mark Connection", def: "Menandai koneksi baru yang masuk." },
+                    { term: "Mark Routing", def: "Menentukan jalur routing berdasarkan tanda koneksi." },
+                    { term: "Distance", def: "Nilai prioritas rute. Angka lebih kecil = Lebih prioritas." }
+                ],
+                points: [
+                    "Langkah 1: Buat NAT Masquerade untuk kedua Interface ISP.",
+                    "Langkah 2: Mangle - Mark Connection (Input & Forward).",
+                    "Langkah 3: Mangle - Mark Routing berdasarkan Mark Connection.",
+                    "Langkah 4: IP Route - Arahkan Mark Routing ke Gateway masing-masing.",
+                    "Langkah 5: Tambahkan Failover dengan Check Gateway & Distance."
+                ],
+                quiz: [
+                    { q: "Fitur apa untuk menandai paket?", opts: ["NAT", "Filter Rule", "Mangle"], ans: 2, exp: "Mangle digunakan untuk marking packet/connection/routing." }
+                ]
+            }
         };
 
-        const driveLinks = {
-            "X TKJ A": "https://drive.google.com/drive/folders/1b2Mg_YHYij2O37oALZjg852woYsCpyFP?usp=drive_link",
-            "X TKJ B": "https://drive.google.com/drive/folders/1p6J-WpOSDDFhtOH1H4OiDNCzNbZA2TkP?usp=drive_link",
-            "X TBSM": "https://drive.google.com/drive/folders/1CCl5Jc7RJW8GdgEERaoOnIA-X7-AyXwd?usp=drive_link"
-        };
-
-        const sikapList = [
-            { title: "Beriman & Bertakwa", desc: "Menjaga sopan santun dan tidak berkata kasar saat merasa lelah atau emosi." },
-            { title: "Mandiri", desc: "Tidak banyak mengeluh dan berusaha menyelesaikan tugas lari sesuai kemampuan sendiri." },
-            { title: "Gotong Royong", desc: "Memberi semangat (support) kepada teman yang tertinggal atau kesulitan saat lari." },
-            { title: "Bernalar Kritis", desc: "Berani bertanya jika belum paham teknik atau mampu menjawab pertanyaan guru." },
-            { title: "Kreatif", desc: "Mencari solusi sederhana saat latihan (misal: mengatur napas sendiri agar tidak cepat capek)." }
+        // Checklist Profil Pelajar Pancasila
+        const p5Items = [
+            { text: "<strong>Bernalar Kritis:</strong> Mampu menganalisis penyebab jalur down.", icon: "fa-brain" },
+            { text: "<strong>Mandiri:</strong> Mampu melakukan troubleshooting dasar tanpa bantuan.", icon: "fa-user-clock" },
+            { text: "<strong>Kreatif:</strong> Mencari solusi alternatif saat failover gagal.", icon: "fa-lightbulb" }
         ];
 
-        window.loadStudents = function() {
-            const classSelect = document.getElementById('class-select');
-            const studentSelect = document.getElementById('student-select');
-            const selectedClass = classSelect.value;
-            studentSelect.innerHTML = '<option value="">-- Pilih Nama Siswa --</option>';
-            document.getElementById('absen-input').value = "";
-            if (selectedClass && studentData[selectedClass]) {
-                studentData[selectedClass].forEach((name, index) => {
-                    const option = document.createElement('option');
-                    option.value = index + 1;
-                    option.text = name;
-                    studentSelect.appendChild(option);
-                });
-            }
-        }
+        // Global State Variables
+        let currentTab = 'konsep';
+        let puzzleScore = 0;
+        let quizScore = 0;
+        let cliScore = 0;
+        let failoverScore = 0;
 
-        window.updateAbsen = function() {
-            const studentSelect = document.getElementById('student-select');
-            const absenInput = document.getElementById('absen-input');
-            if (studentSelect.value) absenInput.value = studentSelect.value;
-            else absenInput.value = "";
-        }
+        // --- 2. LOGIKA UTAMA & NAVIGASI ---
 
-        const rppData = {
-            1: {
-                title: "Pertemuan 1: Lari Jarak Pendek (Sprint)",
-                materi: `<div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Organisasi</strong><p class="mb-2">Atletik disebut sebagai <em>"Mother of Sports"</em> (Induk Cabang Olahraga) karena menjadi fondasi gerakan dasar seperti lari, lompat, dan lempar. Induk organisasi internasionalnya adalah <strong>World Athletics</strong>, sedangkan di Indonesia adalah <strong>PASI</strong> (Persatuan Atletik Seluruh Indonesia).</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Teknik Start Jongkok (Crouch Start)</strong><p class="mb-2">Teknik start yang efektif menggunakan tumpuan yang kuat untuk menghasilkan dorongan maksimal.</p><ul class="list-disc ml-4 space-y-1 mt-1"><li><strong>"Bersedia":</strong> Posisi jongkok, tangan membentuk huruf V terbalik di belakang garis start. Lutut kaki belakang menyentuh permukaan lintasan.</li><li><strong>"Siap":</strong> Angkat <strong>panggul</strong> sedikit lebih tinggi dari bahu. Pindahkan pusat berat badan ke depan (bertumpu pada lengan) untuk persiapan tolakan.</li><li><strong>"Ya":</strong> Lakukan <strong>tolakan eksplosif</strong> kaki belakang pada tumpuan agar tubuh meluncur cepat ke depan dengan sudut kemiringan yang tepat.</li></ul></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Biomekanika Lari Sprint</strong><p>Saat melakukan sprint, tubuh condong ke depan (body lean). Tumpuan kaki menggunakan <strong>ujung telapak kaki (forefoot)</strong> untuk meminimalkan waktu kontak dengan tanah dan memaksimalkan dorongan. Ayunan lengan siku ditekuk 90 derajat secara kuat.</p></div>`,
-                aktivitas: [
-                    { title: "Praktik Posisi Tangan", desc: "Melatih posisi tangan V-terbalik di garis start. Memastikan jari-jari kokoh menopang beban tubuh untuk stabilitas." },
-                    { title: "Latihan Reaksi (Reaction Drill)", desc: "Berdiri membelakangi instruktur. Saat mendengar sinyal suara, segera berbalik dan melakukan akselerasi 5-10 meter." },
-                    { title: "Sprint 30 Meter", desc: "Melakukan lari 30 meter. Fokus pada transisi posisi tubuh dari condong (fase akselerasi) ke posisi lari tegak." },
-                    { title: "Teknik Memasuki Garis Finish", desc: "Berlari melewati garis finish dengan membusungkan dada (The Dip) tanpa mengurangi kecepatan secara tiba-tiba." }
-                ],
-                soal: [
-                    "Apa yang paling sulit kamu rasakan saat melakukan start jongkok tadi? Apakah kakimu terasa licin atau kuat menolak?",
-                    "Saat lari kencang tadi, apakah kamu lari jinjit (ujung kaki) atau telapak rata? Mana yang menurutmu membuat larimu lebih cepat?",
-                    "Saat aba-aba 'Siap' (panggul naik), apakah tanganmu terasa gemetar menahan berat badan? Ceritakan apa yang kamu rasakan di lenganmu!"
-                ]
-            },
-            2: {
-                title: "Pertemuan 2: Lari Jarak Menengah (800m - 1500m)",
-                materi: `<div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Karakteristik Lari Menengah</strong><p class="mb-2">Nomor lari 800m dan 1500m memiliki sejarah panjang sejak Olimpiade Kuno. Nomor ini unik karena menuntut perpaduan dua aspek fisik utama: <strong>Kecepatan</strong> (seperti sprinter) dan <strong>Daya Tahan</strong> (seperti pelari maraton). Pelari harus cerdas menghemat tenaga (efisiensi) di awal, namun memiliki sisa tenaga untuk sprint di akhir.</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Analisis Teknik & Posisi Tubuh</strong><p class="mb-2">Berbeda dengan sprinter yang membungkuk, pelari jarak menengah menggunakan <strong>Start Berdiri (Standing Start)</strong> dengan posisi tubuh lebih tegak (sekitar 80-85 derajat). Posisi tegak ini penting untuk membuka rongga dada agar asupan oksigen ke paru-paru lebih maksimal selama berlari.</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Strategi Lomba (Taktik)</strong><ul class="list-disc ml-4 space-y-1"><li><strong>Pacing (Pengaturan Irama):</strong> Menjaga kecepatan tetap stabil (konstan) di setiap putaran agar tidak kelelahan dini.</li><li><strong>Positioning:</strong> Menjaga posisi agar tidak terkurung lawan, terutama saat memasuki tikungan.</li><li><strong>Kick:</strong> Kemampuan melakukan akselerasi maksimal di 100-200 meter terakhir menjelang finish.</li></ul></div>`,
-                aktivitas: [
-                    { title: "Simulasi Start Berdiri", desc: "Mempraktikkan posisi kaki (satu depan, satu belakang) dengan lutut sedikit ditekuk dan badan condong." },
-                    { title: "Teknik Pendaratan (Midfoot)", desc: "Jogging ritmis dengan fokus pendaratan kaki rata. Membandingkan efisiensinya dengan teknik jinjit." },
-                    { title: "Latihan Pacing", desc: "Berlari dengan target waktu putaran yang konsisten (misal: 2 menit per putaran) untuk melatih 'feeling' irama." },
-                    { title: "Manajemen Pernapasan", desc: "Berlari dengan pola napas ritmis 2:2 (2 langkah inhalasi, 2 langkah ekshalasi)." }
-                ],
-                soal: [
-                    "Apa bedanya rasa capek saat lari sprint (Pertemuan 1) dengan lari keliling lapangan hari ini? Mana yang lebih bikin napasmu 'ngos-ngosan'?",
-                    "Apakah perutmu terasa sakit (suduk) atau napasmu sesak saat berlari tadi? Jika iya, apa yang kamu lakukan biar enakan?",
-                    "Coba bayangkan jika kamu lari secepat kilat (sprint) di awal start tadi, kira-kira apa yang akan terjadi pada kakimu di putaran terakhir? Masih kuat atau lemas?"
-                ]
-            },
-            3: {
-                title: "Pertemuan 3: Lari Jarak Jauh (Endurance)",
-                materi: `<div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">1. Sejarah & Filosofi Marathon</strong><p class="mb-2">Lari jarak jauh memiliki akar sejarah dari legenda Marathon (Yunani Kuno). Ini merupakan uji ketahanan fisik dan mental manusia yang ekstrem.</p><div class="grid grid-cols-1 gap-1 text-[10px] bg-slate-50 p-2 rounded mb-2"><p><strong>Fartlek (Speed Play):</strong> Metode latihan variasi kecepatan (lari, jogging, jalan) di medan alami.</p><p><strong>Personal Best (PB):</strong> Catatan waktu terbaik pribadi yang menjadi tolok ukur kemajuan atlet.</p></div></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">2. Konsep Daya Tahan (Endurance)</strong><p>Kunci lari jarak jauh adalah efisiensi energi. Ayunan lengan rendah dan rileks. Frekuensi langkah (cadence) dijaga stabil untuk menghemat konsumsi oksigen.</p></div><div class="mb-4"><strong class="text-blue-800 block mb-1 text-sm border-b border-blue-200 pb-1">3. Fenomena Kelelahan</strong><p>Pelari jarak jauh sering menghadapi fase <em>"Hitting the Wall"</em>, yaitu kondisi kehabisan cadangan glikogen otot secara drastis. Diperlukan strategi mental dan hidrasi yang tepat untuk mengatasinya.</p></div>`,
-                aktivitas: [
-                    { title: "Latihan Fartlek", desc: "Berlari durasi 15 menit dengan variasi intensitas: Sprint, Jogging, dan Jalan secara bergantian." },
-                    { title: "Uji Daya Tahan (Tes Cooper)", desc: "Berlari sejauh mungkin dalam waktu 12 menit untuk mengukur kapasitas aerobik (VO2 Max)." },
-                    { title: "Pemulihan Denyut Nadi", desc: "Mengukur denyut nadi pemulihan (recovery heart rate) untuk menilai tingkat kebugaran jantung." },
-                    { title: "Pendinginan (Cooling Down)", desc: "Melakukan peregangan statis pada otot tungkai untuk mencegah kram otot." }
-                ],
-                soal: [
-                    "Bagian tubuh mana yang paling pegal saat lari jarak jauh tadi? Kaki, napas, atau pundak? Ceritakan rasanya!",
-                    "Apa yang kamu pikirkan saat merasa sangat capek tapi harus tetap lari? Kalimat apa yang kamu ucapkan dalam hati biar semangat lagi?",
-                    "Mana yang lebih asik menurutmu: Lari terus-menerus dengan kecepatan sama, atau lari Fartlek (lari-jalan-lari) yang berubah-ubah? Kenapa?"
-                ]
-            }
-        };
-
-        window.loadMeetingData = function() {
-            const id = document.getElementById('meetingSelector').value;
-            const data = rppData[id];
-            document.getElementById('display-meeting-title').innerText = data.title;
-            document.getElementById('content-materi').innerHTML = data.materi;
-
-            const actContainer = document.getElementById('content-aktivitas');
-            actContainer.innerHTML = '';
-            data.aktivitas.forEach((act, idx) => {
-                actContainer.innerHTML += `
-                    <div class="bg-white border border-slate-200 p-3 rounded shadow-sm flex items-start gap-3">
-                        <input type="checkbox" class="mt-1 custom-checkbox shrink-0">
-                        <div>
-                            <h4 class="font-bold text-xs text-slate-800">${act.title}</h4>
-                            <p class="text-[10px] text-slate-500 leading-tight mt-0.5">${act.desc}</p>
-                        </div>
-                    </div>
-                `;
-            });
-
-            const soalContainer = document.getElementById('content-soal');
-            soalContainer.innerHTML = '';
-            data.soal.forEach((soal, idx) => {
-                soalContainer.innerHTML += `
-                    <div class="relative">
-                        <label class="font-bold text-xs text-slate-800 block mb-1">${idx + 1}. ${soal}</label>
-                        <textarea class="w-full border-b border-dashed border-slate-300 bg-transparent outline-none text-xs py-1 focus:bg-blue-50 transition-colors resize-none overflow-hidden" rows="2" placeholder="Jawaban: ................................................................................."></textarea>
-                    </div>
-                `;
-            });
-        }
-
-        window.logout = function() {
-            document.getElementById('teacher-panel').classList.add('hidden');
-            document.getElementById('btn-login').classList.remove('hidden');
-            document.getElementById('meetingSelector').value = "1";
-            loadMeetingData();
-        }
-
-        // Tanda Tangan
-        function setupSig(id) {
-            const canvas = document.getElementById(id);
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let drawing = false;
-            function resizeCanvas() {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                ctx.scale(ratio, ratio);
-                ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
-            }
-            setTimeout(resizeCanvas, 100);
-            function getPos(e) {
-                const rect = canvas.getBoundingClientRect();
-                return {
-                    x: (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left,
-                    y: (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top
-                };
-            }
-            const start = (e) => { drawing = true; ctx.beginPath(); const pos = getPos(e); ctx.moveTo(pos.x, pos.y); if(e.type==='touchstart') e.preventDefault(); };
-            const move = (e) => { if(!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); if(e.type==='touchmove') e.preventDefault(); };
-            const end = () => drawing = false;
-            canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
-            canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false}); canvas.addEventListener('touchend', end);
-        }
-        
-        window.clearSig = function(id) {
-            const canvas = document.getElementById(id);
-            const ctx = canvas.getContext('2d');
-            ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.restore(); ctx.beginPath();
-        }
-
-        window.addEventListener('load', () => {
-            document.getElementById('student-date').valueAsDate = new Date();
-            loadMeetingData();
-            setupSig('sig-siswa');
-            
-            // Inisialisasi Checklist
-            const checklistBody = document.getElementById('checklist-sikap-body');
-            if (checklistBody) {
-                checklistBody.innerHTML = '';
-                sikapList.forEach((item, idx) => {
-                    const bgClass = idx % 2 === 0 ? '' : 'bg-slate-50';
-                    checklistBody.innerHTML += `
-                        <tr class="${bgClass}">
-                            <td class="p-2 border border-slate-300 text-center font-bold">${idx + 1}</td>
-                            <td class="p-2 border border-slate-300">
-                                <strong>${item.title}:</strong> ${item.desc}
-                            </td>
-                            <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                            <td class="p-2 border border-slate-300 text-center"><input type="checkbox" class="custom-checkbox"></td>
-                        </tr>
-                    `;
-                });
-            }
-        });
-    </script>
-
-    <!-- Firebase Module Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, Timestamp, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // CONFIG FIREBASE OTOMATIS (DUAL MODE)
-        let app, auth, db, currentUser;
-        let collectionPath;
-        let selectedStudentClass = null; 
-
-        try {
-            // Mode 1: Editor Canvas (Internal)
-            if (typeof __firebase_config !== 'undefined') {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+        // Handle Login
+        document.getElementById('identity-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('student-name').value;
+            if(name){
+                // Hide Login, Show Main
+                document.getElementById('identity-section').classList.add('hidden');
+                document.getElementById('top-header').classList.remove('hidden'); 
+                document.getElementById('main-content').classList.remove('hidden');
+                document.getElementById('main-content').classList.add('fade-in', 'flex'); 
                 
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                collectionPath = `artifacts/${appId}/public/data/lkpd_submissions`;
-
-                // Auth Internal
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                };
-                initAuth();
-            }
-        } catch (e) {
-            console.log("Switching to External Config...");
-        }
-
-        // Mode 2: External Hosting (GitHub Pages) - Fallback jika mode 1 gagal
-        if (!app) {
-            const firebaseConfig = {
-                apiKey: "AIzaSyC-FFct17BVAdsqii9DOuAQLZnGF25fzOA",
-                authDomain: "lkpd-pjok-smk.firebaseapp.com",
-                projectId: "lkpd-pjok-smk",
-                storageBucket: "lkpd-pjok-smk.firebasestorage.app",
-                messagingSenderId: "1006297448814",
-                appId: "1:1006297448814:web:987593ba4365f4b5a7c17f"
-            };
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            collectionPath = 'lkpd_submissions'; // Root path
-
-            signInAnonymously(auth).catch(console.error);
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                console.log("DB Connected.");
+                // Initialize First Tab
+                renderContent('konsep'); 
+                renderP5();
             }
         });
 
-        // --- GLOBAL WINDOW FUNCTIONS ---
-        
-        window.saveStudentData = async function() {
-            // 1. Validasi Input
-            const kelas = document.getElementById('class-select').value;
-            const studentSelect = document.getElementById('student-select');
-            const nama = studentSelect.options[studentSelect.selectedIndex]?.text;
-            const tgl = document.getElementById('student-date').value;
+        // Handle Tab Switching
+        function switchTab(type) {
+            currentTab = type;
+            // Update UI Tabs
+            ['konsep', 'algo', 'simulasi', 'config'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === type) { 
+                    btn.classList.add('tab-active'); 
+                    btn.classList.remove('tab-inactive'); 
+                } else { 
+                    btn.classList.add('tab-inactive'); 
+                    btn.classList.remove('tab-active'); 
+                }
+            });
 
-            if (!kelas || !studentSelect.value || !tgl) {
-                alert("Harap lengkapi Nama, Kelas, dan Tanggal!");
-                return;
-            }
-
-            // 2. LOGIKA UPLOAD DRIVE SESUAI KELAS
-            const driveLinks = {
-                "X TKJ A": "https://drive.google.com/drive/folders/1b2Mg_YHYij2O37oALZjg852woYsCpyFP?usp=drive_link",
-                "X TKJ B": "https://drive.google.com/drive/folders/1p6J-WpOSDDFhtOH1H4OiDNCzNbZA2TkP?usp=drive_link",
-                "X TBSM": "https://drive.google.com/drive/folders/1CCl5Jc7RJW8GdgEERaoOnIA-X7-AyXwd?usp=drive_link"
-            };
+            const std = document.getElementById('standard-content');
+            const games = document.getElementById('game-center');
             
-            const targetLink = driveLinks[kelas];
-            
-            if (targetLink) {
-                 // Buka Drive di tab baru
-                 window.open(targetLink, '_blank');
+            // Logic Display Content vs Game
+            if(type === 'simulasi') {
+                std.classList.add('hidden');
+                games.classList.remove('hidden');
+                document.getElementById('cp-text').innerText = contentData.simulasi.cp;
             } else {
-                alert("Link Drive untuk kelas ini belum diatur. Silakan lapor ke Guru.");
-                return;
+                games.classList.add('hidden');
+                std.classList.remove('hidden');
+                renderContent(type);
             }
+        }
+
+        // Render Dynamic Content (Teori)
+        function renderContent(type) {
+            const data = contentData[type];
+            document.getElementById('cp-text').innerText = data.cp;
+            document.getElementById('material-title').innerText = data.title;
+            document.getElementById('video-embed').src = data.video;
+            document.getElementById('video-desc').innerText = data.videoDesc;
             
-            // 3. (Opsional) Simpan log ke database agar Guru tahu siapa yang "klik" kumpul
-            if (currentUser) {
-                try {
-                     const pertemuan = document.getElementById('meetingSelector').options[document.getElementById('meetingSelector').selectedIndex].text;
-                     const submissionData = {
-                        kelas, nama, no_absen: studentSelect.value, tanggal: tgl, pertemuan,
-                        status: "Diunggah ke Drive", timestamp: Timestamp.now()
-                     };
-                     await addDoc(collection(db, collectionPath), submissionData);
-                } catch(e) { console.log("Log saved locally only"); }
-            }
-        };
-        
-        // --- DASHBOARD GURU LOGIC ---
-        let loadedSubmissions = [];
-        window.openDashboard = function() {
-            if(!currentUser) return;
-            document.getElementById('dashboard-modal').classList.remove('hidden');
-            const tbody = document.getElementById('dashboard-body');
-            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center">Loading...</td></tr>';
+            // Key Points
+            const points = document.getElementById('key-points'); 
+            points.innerHTML = '';
+            data.points.forEach(p => {
+                points.innerHTML += `<li class="text-sm text-slate-300 flex gap-2 items-start"><i class="fas fa-check-circle text-green-500 mt-1 shrink-0"></i> <span>${p}</span></li>`;
+            });
             
-            onSnapshot(collection(db, collectionPath), (snap) => {
-                loadedSubmissions = [];
-                snap.forEach(d => {
-                    let item = d.data();
-                    item.id = d.id;
-                    loadedSubmissions.push(item);
+            // Glossary
+            const glos = document.getElementById('glossary-container'); 
+            glos.innerHTML = '';
+            data.glossary.forEach(g => {
+                glos.innerHTML += `<div class="bg-slate-900 p-2 border border-slate-700 rounded"><span class="text-cyan-400 font-bold block mb-1">${g.term}</span><span class="text-slate-400 leading-tight">${g.def}</span></div>`;
+            });
+
+            // Quiz
+            const quiz = document.getElementById('quiz-container'); 
+            quiz.innerHTML = '';
+            data.quiz.forEach((q, i) => {
+                let opts = ''; 
+                q.opts.forEach((o, oi) => {
+                    opts += `<button onclick="checkQuiz(this, ${oi}, ${q.ans})" class="w-full text-left p-3 border border-slate-700 mb-2 rounded text-xs text-slate-300 hover:bg-slate-700 transition-colors flex items-center justify-between group">
+                        <span>${o}</span>
+                        <i class="fas fa-check opacity-0 group-hover:opacity-50"></i>
+                    </button>`;
                 });
-                loadedSubmissions.sort((a,b) => a.kelas.localeCompare(b.kelas));
-                window.cachedSubmissions = loadedSubmissions;
-                renderList(loadedSubmissions);
-            });
-        };
-
-        function renderList(data) {
-            const tbody = document.getElementById('dashboard-body');
-            tbody.innerHTML = '';
-            data.forEach(sub => {
-                const color = sub.status === "Sudah Dinilai" ? "text-green-600 bg-green-100" : "text-amber-600 bg-amber-100";
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 cursor-pointer border-b" onclick="openGradingPanel('${sub.id}')">
-                        <td class="px-4 py-3"><b>${sub.nama}</b><div class="text-xs text-slate-500">${sub.kelas}</div></td>
-                        <td class="px-4 py-3 text-xs">${sub.pertemuan}</td>
-                        <td class="px-4 py-3 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold ${color}">${sub.status}</span></td>
-                        <td class="px-4 py-3 text-center"><button class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs">Nilai</button></td>
-                    </tr>
-                `;
+                quiz.innerHTML += `<div class="mb-4 pb-2 border-b border-slate-800 last:border-0"><p class="text-xs font-bold text-white mb-2"><i class="fas fa-question-circle text-purple-400"></i> ${q.q}</p>${opts}</div>`;
             });
         }
-
-        window.openGradingPanel = function(id) {
-            const sub = loadedSubmissions.find(s => s.id === id);
-            if(!sub) return;
-            
-            selectedStudentClass = sub.kelas; // Store class for drive upload logic
-            
-            document.getElementById('grading-panel').classList.remove('hidden');
-            document.getElementById('grading-panel').classList.add('flex');
-            document.getElementById('grading-actions').classList.remove('hidden');
-            document.getElementById('grading-actions').classList.add('flex'); // Show buttons
-            
-            let ansHtml = sub.jawaban_refleksi ? sub.jawaban_refleksi.map((a,i) => `<div class="bg-slate-50 p-2 border mb-2 text-xs"><b>Jawab ${i+1}:</b> ${a}</div>`).join('') : '';
-            
-            document.getElementById('grading-content').innerHTML = `
-                <h3 class="font-bold">${sub.nama}</h3>
-                <p class="text-xs text-slate-500 mb-4">${sub.kelas}</p>
-                <div class="mb-4">${ansHtml}</div>
-                <div class="space-y-2">
-                   <input type="number" id="grade-val" value="${sub.nilai!='-'?sub.nilai:''}" placeholder="Nilai" class="w-full border p-2 text-sm">
-                   <select id="grade-pred" class="w-full border p-2 text-sm">
-                       <option value="A">A</option><option value="B">B</option><option value="C">C</option>
-                   </select>
-                   <textarea id="grade-note" class="w-full border p-2 text-sm" placeholder="Catatan...">${sub.catatan!='-'?sub.catatan:''}</textarea>
-                   <button onclick="submitGrade('${sub.id}')" class="w-full bg-blue-600 text-white p-2 rounded">Simpan</button>
-                </div>
-            `;
-        }
-
-        window.submitGrade = async function(id) {
-             const val = document.getElementById('grade-val').value;
-             const pred = document.getElementById('grade-pred').value;
-             const note = document.getElementById('grade-note').value;
-             if(!val) return alert("Isi nilai!");
-             
-             await updateDoc(doc(db, collectionPath, id), {
-                 nilai: val, predikat: pred, catatan: note, status: "Sudah Dinilai"
-             });
-             alert("Tersimpan!");
-        }
         
-        // --- NEW DASHBOARD ACTION FUNCTIONS ---
-        
-        window.printStudentFromDashboard = function() {
-             document.getElementById('dashboard-modal').classList.add('hidden');
-             setTimeout(() => {
-                 window.print();
-             }, 500);
-        }
-
-        window.uploadToDriveFromDashboard = function() {
-            if (!selectedStudentClass) {
-                alert("Pilih siswa terlebih dahulu!");
-                return;
+        // Logic Cek Jawaban Quiz
+        function checkQuiz(btn, optIdx, ansIdx) {
+            // Disable siblings
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.disabled = true);
+            
+            if(optIdx === ansIdx) { 
+                btn.classList.remove('hover:bg-slate-700');
+                btn.classList.add('bg-green-900', 'text-green-400', 'border-green-500'); 
+                btn.innerHTML += ` <i class="fas fa-check-circle"></i>`;
+                quizScore += 10; 
+            } else { 
+                btn.classList.remove('hover:bg-slate-700');
+                btn.classList.add('bg-red-900', 'text-red-400', 'border-red-500');
+                btn.innerHTML += ` <i class="fas fa-times-circle"></i>`;
             }
+        }
+
+        function renderP5() {
+            const c = document.getElementById('p5-checklist-container'); 
+            c.innerHTML = '';
+            p5Items.forEach(i => {
+                c.innerHTML += `<label class="flex gap-3 items-center bg-slate-900 p-3 rounded border border-slate-700 cursor-pointer hover:bg-slate-800 transition">
+                    <input type="checkbox" class="w-4 h-4 accent-purple-500 rounded focus:ring-purple-500 ring-offset-slate-900">
+                    <span class="text-xs text-slate-300 flex-1">${i.text}</span>
+                    <i class="fas ${i.icon} text-slate-600"></i>
+                </label>`;
+            });
+        }
+
+        // --- 3. GAME LOGIC ---
+
+        function switchGame(gameType) {
+            // Hide all, Show selected
+            ['puzzle', 'cli', 'failover'].forEach(g => {
+                const area = document.getElementById(`game-${g}-area`);
+                const btn = document.getElementById(`btn-game-${g}`);
+                if(g === gameType) {
+                    area.classList.remove('hidden');
+                    btn.classList.add('game-btn-active'); btn.classList.remove('game-btn-inactive');
+                } else {
+                    area.classList.add('hidden');
+                    btn.classList.add('game-btn-inactive'); btn.classList.remove('game-btn-active');
+                }
+            });
+        }
+
+        // === GAME 1: PUZZLE (DRAG & DROP) ===
+        const draggables = document.querySelectorAll('.draggable-source');
+        const dropZone = document.getElementById('target-container');
+        
+        draggables.forEach(d => { 
+            d.addEventListener('dragstart', () => d.classList.add('dragging', 'opacity-50')); 
+            d.addEventListener('dragend', () => {
+                d.classList.remove('dragging', 'opacity-50'); 
+                validatePuzzle();
+            }); 
+        });
+        
+        dropZone.addEventListener('dragover', e => { 
+            e.preventDefault(); 
+            const after = getDragAfterElement(dropZone, e.clientY); 
+            const d = document.querySelector('.dragging'); 
+            if(!d) return;
+            if(!after) dropZone.appendChild(d); 
+            else dropZone.insertBefore(d, after); 
+            document.getElementById('placeholder-text').style.display='none'; 
+        });
+
+        function getDragAfterElement(c, y) { 
+            return [...c.querySelectorAll('.draggable-source:not(.dragging)')].reduce((closest, child) => { 
+                const box = child.getBoundingClientRect(); 
+                const offset = y - box.top - box.height/2; 
+                return offset < 0 && offset > closest.offset ? {offset, element: child} : closest; 
+            }, {offset: Number.NEGATIVE_INFINITY}).element; 
+        }
+
+        function validatePuzzle() {
+            const ord = [...dropZone.querySelectorAll('.draggable-source')].map(el => el.dataset.id);
+            const feedback = document.getElementById('puzzle-feedback');
             
-            const driveLinks = {
-                "X TKJ A": "https://drive.google.com/drive/folders/1b2Mg_YHYij2O37oALZjg852woYsCpyFP?usp=drive_link",
-                "X TKJ B": "https://drive.google.com/drive/folders/1p6J-WpOSDDFhtOH1H4OiDNCzNbZA2TkP?usp=drive_link",
-                "X TBSM": "https://drive.google.com/drive/folders/1CCl5Jc7RJW8GdgEERaoOnIA-X7-AyXwd?usp=drive_link"
-            };
+            // Logika Sederhana: Harus diawali "/ip route add" (ID 1)
+            // Idealnya urutan: 1 (ip route), 2/3/4/5 (param), tapi kita cek ID 1 di awal saja untuk simplifikasi
+            if(ord.length === 5) {
+                if(ord[0] === "1") { 
+                    puzzleScore = 100; 
+                    feedback.innerText = "✅ SYNTAX VALID! SCRIPT ACCEPTED."; 
+                    feedback.className = "mt-3 text-xs text-center text-green-400 block p-2 bg-green-900/30 rounded border border-green-500"; 
+                } else { 
+                    puzzleScore = 50; 
+                    feedback.innerText = "❌ SYNTAX ERROR: Command must start with /ip route"; 
+                    feedback.className = "mt-3 text-xs text-center text-red-400 block p-2 bg-red-900/30 rounded border border-red-500"; 
+                }
+            }
+        }
+
+        // === GAME 2: CLI RUSH (TYPING) ===
+        const cliCommands = [
+            "check-gateway=ping", 
+            "per-connection-classifier", 
+            "distance=1", 
+            "mark-routing", 
+            "chain=prerouting", 
+            "action=mark-connection", 
+            "gateway=8.8.8.8", 
+            "ip route print", 
+            "interface print detail"
+        ];
+        let cliTimer, cliTimeLeft;
+        let cliGameActive = false;
+
+        function startCliGame() {
+            if(cliGameActive) return;
+            cliGameActive = true; cliScore = 0;
+            document.getElementById('cli-score').innerText = "0";
+            document.getElementById('cli-input').disabled = false;
+            document.getElementById('cli-input').focus();
+            document.getElementById('btn-start-cli').innerText = "SESSION ACTIVE... KEEP TYPING!";
+            document.getElementById('btn-start-cli').classList.add('bg-slate-700', 'text-slate-500');
+            nextCliRound();
+        }
+
+        function nextCliRound() {
+            const target = cliCommands[Math.floor(Math.random() * cliCommands.length)];
+            document.getElementById('cli-target').innerText = target;
+            document.getElementById('cli-input').value = '';
+            document.getElementById('cli-message').innerText = "";
             
-            const targetLink = driveLinks[selectedStudentClass];
-            if(targetLink) {
-                window.open(targetLink, '_blank');
+            cliTimeLeft = 100; 
+            document.getElementById('cli-timer-bar').style.width = '100%';
+            
+            clearInterval(cliTimer);
+            cliTimer = setInterval(() => {
+                cliTimeLeft -= 2.5; // Speed adjustment
+                document.getElementById('cli-timer-bar').style.width = cliTimeLeft + '%';
+                if(cliTimeLeft <= 0) endGameCli("CONNECTION TIMED OUT!");
+            }, 100);
+        }
+
+        document.getElementById('cli-input').addEventListener('input', (e) => {
+            if(!cliGameActive) return;
+            if(e.target.value.toLowerCase().trim() === document.getElementById('cli-target').innerText.toLowerCase().trim()) {
+                cliScore += 100; 
+                document.getElementById('cli-score').innerText = cliScore;
+                document.getElementById('cli-score').classList.add('scale-150');
+                setTimeout(() => document.getElementById('cli-score').classList.remove('scale-150'), 200);
+                nextCliRound();
+            }
+        });
+
+        function endGameCli(msg) {
+            clearInterval(cliTimer); 
+            cliGameActive = false;
+            document.getElementById('cli-input').disabled = true;
+            document.getElementById('cli-message').innerText = msg;
+            document.getElementById('btn-start-cli').innerText = "RESTART CLI SESSION";
+            document.getElementById('btn-start-cli').classList.remove('bg-slate-700', 'text-slate-500');
+        }
+
+        // === GAME 3: FAILOVER REFLEX (CLICK REACTION) ===
+        let isp1Active = true;
+        let isp1Online = true; // State ISP 1
+        let failoverGameActive = false;
+        let failoverTimer;
+
+        function startFailoverGame() {
+            if(failoverGameActive) return;
+            failoverGameActive = true;
+            failoverScore = 0;
+            isp1Online = true;
+            document.getElementById('failover-score').innerText = "0";
+            document.getElementById('btn-start-failover').classList.add('hidden');
+            document.getElementById('failover-msg').innerText = "MONITORING TRAFFIC...";
+            updateIspVisuals();
+            
+            // Randomly toggle ISP 1 status loop
+            failoverTimer = setInterval(() => {
+                // 40% chance to flip status
+                if(Math.random() > 0.6) {
+                    isp1Online = !isp1Online;
+                    updateIspVisuals();
+                }
+            }, 1500); // Check every 1.5 seconds
+            
+            // Game duration 30s
+            setTimeout(() => {
+                clearInterval(failoverTimer);
+                failoverGameActive = false;
+                document.getElementById('failover-msg').innerText = "SESSION ENDED.";
+                document.getElementById('btn-start-failover').classList.remove('hidden');
+                document.getElementById('btn-start-failover').innerText = "RESTART MONITORING";
+            }, 30000);
+        }
+
+        function updateIspVisuals() {
+            const stat1 = document.getElementById('isp1-status');
+            const btn1 = document.getElementById('btn-isp1');
+            
+            if(isp1Online) {
+                stat1.innerText = "ISP 1: ONLINE";
+                stat1.className = "mb-2 text-xs font-bold bg-green-900 text-green-400 py-1 rounded shadow";
+                btn1.className = "isp-btn w-full h-32 bg-slate-800 border-2 border-green-500 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-700 group relative";
             } else {
-                alert("Link Drive tidak ditemukan untuk kelas ini.");
+                stat1.innerText = "ISP 1: RTO (DOWN)";
+                stat1.className = "mb-2 text-xs font-bold bg-red-900 text-red-400 py-1 rounded animate-pulse shadow";
+                btn1.className = "isp-btn w-full h-32 bg-slate-800 border-2 border-red-500 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-slate-700 group relative";
             }
         }
 
-        window.closeGradingPanel = () => {
-            document.getElementById('grading-panel').classList.add('hidden');
-            document.getElementById('grading-panel').classList.remove('flex');
-        }
-        window.closeDashboard = () => document.getElementById('dashboard-modal').classList.add('hidden');
-        
-        window.exportToCSV = function() {
-             if (!window.cachedSubmissions) return;
-             const rows = [["Nama", "Kelas", "Nilai", "Catatan"]];
-             window.cachedSubmissions.forEach(s => rows.push([`"${s.nama}"`, s.kelas, s.nilai, `"${s.catatan}"`]));
-             const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-             const link = document.createElement("a");
-             link.setAttribute("href", encodeURI(csvContent));
-             link.setAttribute("download", "nilai.csv");
-             document.body.appendChild(link);
-             link.click();
-             document.body.removeChild(link);
+        function routePacket(clickedIsp) {
+            if(!failoverGameActive) return;
+            
+            const msg = document.getElementById('failover-msg');
+            let points = 0;
+
+            // Logic Failover:
+            // Jika ISP 1 Online -> HARUS KLIK ISP 1 (Primary)
+            // Jika ISP 1 Offline -> HARUS KLIK ISP 2 (Backup)
+            
+            if (clickedIsp === 1) {
+                if (isp1Online) {
+                    points = 10;
+                    msg.innerText = "✅ TRAFFIC SENT VIA PRIMARY";
+                    msg.className = "text-center mt-3 text-xs font-bold h-4 text-green-400";
+                } else {
+                    points = -20;
+                    msg.innerText = "❌ PACKET LOST! PRIMARY IS DOWN!";
+                    msg.className = "text-center mt-3 text-xs font-bold h-4 text-red-400";
+                    navigator.vibrate(200); // Haptic feedback on mobile
+                }
+            } else if (clickedIsp === 2) {
+                if (!isp1Online) {
+                    points = 10;
+                    msg.innerText = "✅ FAILOVER SUCCESS (BACKUP USED)";
+                    msg.className = "text-center mt-3 text-xs font-bold h-4 text-yellow-400";
+                } else {
+                    points = -10;
+                    msg.innerText = "⚠️ INEFFICIENT! PRIMARY IS AVAILABLE";
+                    msg.className = "text-center mt-3 text-xs font-bold h-4 text-orange-400";
+                }
+            }
+            
+            failoverScore += points;
+            document.getElementById('failover-score').innerText = failoverScore;
         }
 
+        // --- 4. SUBMIT & ADMIN ---
+        function submitLKPD() {
+            const nama = document.getElementById('student-name').value;
+            const kelas = document.getElementById('student-class').value;
+            const refleksi = document.getElementById('input-refleksi').value;
+            
+            const pesan = `*REPORT AIJ PRO - LOAD BALANCING*\n` +
+                          `👤 User: ${nama} (${kelas})\n` +
+                          `--------------------------\n` +
+                          `📊 *SCORE CARD:*\n` +
+                          `🧠 Quiz Teori: ${quizScore}\n` +
+                          `🧩 Logic Puzzle: ${puzzleScore}\n` +
+                          `⌨️ CLI Speed: ${cliScore}\n` +
+                          `⚡ Reflex Failover: ${failoverScore}\n` +
+                          `--------------------------\n` +
+                          `📝 *Catatan:*\n${refleksi || "-"}\n\n` +
+                          `_Sent via AIJ PRO Virtual Lab_`;
+            
+            if(confirm("Apakah data sudah benar? Klik OK untuk membuka WhatsApp.")) {
+                window.open(`https://wa.me/6285709808532?text=${encodeURIComponent(pesan)}`, '_blank');
+            }
+        }
+
+        function openAdminModal() { document.getElementById('admin-modal').classList.remove('hidden'); }
+        function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
+        
+        function checkPin() { 
+            const pin = document.getElementById('admin-pin').value;
+            if(pin === "270302") {
+                closeAdminModal(); 
+                document.getElementById('teacher-dashboard').classList.remove('hidden');
+                
+                // Simulate Log Data
+                const nama = document.getElementById('student-name').value || "Guest User";
+                const tbody = document.getElementById('student-data-body');
+                tbody.innerHTML = `
+                    <tr class="bg-slate-800 border-b border-slate-700">
+                        <td class="p-3 text-white font-bold">${nama}</td>
+                        <td class="p-3">
+                            <span class="bg-blue-900 text-blue-300 text-[10px] px-1 rounded">Q:${quizScore}</span>
+                            <span class="bg-green-900 text-green-300 text-[10px] px-1 rounded">P:${puzzleScore}</span>
+                            <span class="bg-red-900 text-red-300 text-[10px] px-1 rounded">R:${failoverScore}</span>
+                        </td>
+                    </tr>`;
+                document.getElementById('no-data-msg').classList.add('hidden');
+            } else {
+                alert("ACCESS DENIED: Invalid PIN");
+                document.getElementById('admin-pin').value = '';
+            }
+        }
+        
+        function closeDashboard() { document.getElementById('teacher-dashboard').classList.add('hidden'); }
+        function clearData() { 
+            document.getElementById('student-data-body').innerHTML = '';
+            document.getElementById('no-data-msg').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
-
-
+ Buat aplikasi nya
